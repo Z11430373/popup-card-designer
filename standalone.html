@@ -5,19 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>立體卡片設計工具 - 完整版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
         }
         
         .app-container {
             display: flex;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             gap: 0;
         }
         
@@ -27,6 +32,8 @@
             overflow-y: auto;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             padding: 20px;
+            z-index: 100;
+            flex-shrink: 0;
         }
         
         .main-canvas {
@@ -34,11 +41,14 @@
             display: flex;
             flex-direction: column;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-width: 0;
         }
         
         #canvas {
             flex: 1;
             width: 100%;
+            height: 100%;
+            display: block;
         }
         
         .controls-bar {
@@ -49,6 +59,7 @@
             gap: 15px;
             flex-wrap: wrap;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
         
         .control {
@@ -56,10 +67,17 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9em;
+            white-space: nowrap;
+        }
+        
+        .control label {
+            margin: 0;
+            font-weight: 500;
         }
         
         .control input[type="range"] {
-            width: 150px;
+            width: 120px;
+            cursor: pointer;
         }
         
         .section {
@@ -125,6 +143,7 @@
             font-size: 0.8em;
             transition: all 0.3s;
             background: white;
+            font-weight: 500;
         }
         
         .option:hover {
@@ -198,6 +217,7 @@
             font-size: 0.85em;
             display: inline-block;
             width: auto;
+            margin: 0 4px 0 0;
         }
         
         .info-box {
@@ -244,12 +264,19 @@
             gap: 8px;
             margin-top: 12px;
         }
+        
+        .sidebar h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 1.3em;
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <!-- 左側邊欄 -->
         <div class="sidebar">
-            <h2 style="margin-bottom: 20px; color: #667eea;">🎨 立體卡片設計工具</h2>
+            <h2>🎨 立體卡片設計工具</h2>
             
             <!-- 基本信息 -->
             <div class="section">
@@ -347,6 +374,7 @@
             <button class="button btn-primary" id="exportBtn">💾 導出設計</button>
         </div>
         
+        <!-- 主要畫布區 -->
         <div class="main-canvas">
             <canvas id="canvas"></canvas>
             <div class="controls-bar">
@@ -364,7 +392,7 @@
                 </div>
                 <button class="button btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
                 <button class="button btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
-                <button class="button btn-secondary btn-small" id="toggleWireframe">⬛ 線框</button>
+                <button class="button btn-secondary btn-small" id="toggleWireframe">⬜ 線框</button>
             </div>
         </div>
     </div>
@@ -372,15 +400,20 @@
     <script>
         class PopupCardDesigner {
             constructor() {
+                const canvas = document.getElementById('canvas');
+                
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0xf5f7fa);
                 this.scene.fog = new THREE.Fog(0xf5f7fa, 100, 200);
                 
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const width = canvas.clientWidth;
+                const height = canvas.clientHeight;
+                
+                this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
                 this.camera.position.set(0, 0, 30);
                 
-                this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+                this.renderer.setSize(width, height);
                 this.renderer.setPixelRatio(window.devicePixelRatio);
                 this.renderer.shadowMap.enabled = true;
                 
@@ -397,6 +430,8 @@
                 this.mechanism = 'vfold';
                 this.cardColor = 'white';
                 this.isAnimating = false;
+                this.pullTabMesh = null;
+                this.spinnerMesh = null;
                 
                 this.setupEventListeners();
                 this.createInitialModel();
@@ -440,18 +475,21 @@
                 // 複雜度
                 document.getElementById('complexity').addEventListener('input', (e) => {
                     document.getElementById('complexityValue').textContent = e.target.value;
+                    this.updateInfo();
                 });
                 
                 // 旋轉控制
                 document.getElementById('rotateX').addEventListener('input', (e) => {
-                    this.cardModel.rotation.x = e.target.value * Math.PI / 180;
+                    if (this.cardModel) this.cardModel.rotation.x = e.target.value * Math.PI / 180;
                 });
                 document.getElementById('rotateY').addEventListener('input', (e) => {
-                    this.cardModel.rotation.y = e.target.value * Math.PI / 180;
+                    if (this.cardModel) this.cardModel.rotation.y = e.target.value * Math.PI / 180;
                 });
                 document.getElementById('scale').addEventListener('input', (e) => {
-                    const s = parseFloat(e.target.value);
-                    this.cardModel.scale.set(s, s, s);
+                    if (this.cardModel) {
+                        const s = parseFloat(e.target.value);
+                        this.cardModel.scale.set(s, s, s);
+                    }
                 });
                 
                 // 按鈕
@@ -465,8 +503,10 @@
                     document.getElementById('rotateX').value = 0;
                     document.getElementById('rotateY').value = 0;
                     document.getElementById('scale').value = 1;
-                    this.cardModel.rotation.set(0, 0, 0);
-                    this.cardModel.scale.set(1, 1, 1);
+                    if (this.cardModel) {
+                        this.cardModel.rotation.set(0, 0, 0);
+                        this.cardModel.scale.set(1, 1, 1);
+                    }
                 });
                 document.getElementById('toggleWireframe').addEventListener('click', () => this.toggleWireframe());
                 document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
@@ -486,10 +526,12 @@
                 
                 const leftCard = new THREE.Mesh(cardGeom, material);
                 leftCard.position.set(-width / 2, 0, 0);
+                leftCard.castShadow = true;
                 this.cardModel.add(leftCard);
                 
                 const rightCard = new THREE.Mesh(cardGeom, material);
                 rightCard.position.set(width / 2, 0, 0);
+                rightCard.castShadow = true;
                 this.cardModel.add(rightCard);
                 
                 // 根據機制創建元素
@@ -517,6 +559,7 @@
                 const material = this.getElementMaterial();
                 const cone = new THREE.Mesh(geometry, material);
                 cone.position.set(0, 2, 1);
+                cone.castShadow = true;
                 this.cardModel.add(cone);
             }
             
@@ -526,6 +569,7 @@
                     const material = this.getElementMaterial();
                     const box = new THREE.Mesh(geom, material);
                     box.position.z = i * 1.2 + 1;
+                    box.castShadow = true;
                     this.cardModel.add(box);
                 }
             }
@@ -540,6 +584,7 @@
                     });
                     const layer = new THREE.Mesh(geom, mat);
                     layer.position.z = i * 2 + 1;
+                    layer.castShadow = true;
                     this.cardModel.add(layer);
                 }
             }
@@ -549,6 +594,7 @@
                 const mat = this.getElementMaterial();
                 this.pullTabMesh = new THREE.Mesh(geom, mat);
                 this.pullTabMesh.position.z = 1;
+                this.pullTabMesh.castShadow = true;
                 this.cardModel.add(this.pullTabMesh);
             }
             
@@ -557,6 +603,7 @@
                 const mat = this.getElementMaterial();
                 this.spinnerMesh = new THREE.Mesh(geom, mat);
                 this.spinnerMesh.position.z = 1.5;
+                this.spinnerMesh.castShadow = true;
                 this.cardModel.add(this.spinnerMesh);
             }
             
@@ -590,7 +637,7 @@
                 const area = width * height;
                 const depth = Math.max(5, 8 + parseInt(document.getElementById('complexity').value) * 2);
                 
-                document.getElementById('statArea').textContent = area.toFixed(0);
+                document.getElementById('statArea').textContent = area.toFixed(0) + ' cm²';
                 document.getElementById('statDepth').textContent = depth.toFixed(1) + ' cm';
                 
                 const mechanismNames = {
@@ -629,6 +676,7 @@
                 a.href = url;
                 a.download = 'popup-card-' + Date.now() + '.json';
                 a.click();
+                URL.revokeObjectURL(url);
             }
             
             animate() {
@@ -648,8 +696,9 @@
             }
             
             onWindowResize() {
-                const width = window.innerWidth;
-                const height = window.innerHeight;
+                const canvas = document.getElementById('canvas');
+                const width = canvas.clientWidth;
+                const height = canvas.clientHeight;
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
                 this.renderer.setSize(width, height);
