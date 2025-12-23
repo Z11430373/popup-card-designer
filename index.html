@@ -268,6 +268,7 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .animation-controls button {
@@ -684,6 +685,8 @@
                         <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1">
                     </div>
                     <div class="animation-controls">
+                        <button class="btn-secondary btn-small" id="openCloseCard">📖 開闔</button>
+                        <button class="btn-secondary btn-small" id="showPaperAnimation">📄 紙張展開</button>
                         <button class="btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
                         <button class="btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
                         <button class="btn-secondary btn-small" id="toggleWireframe">⬜ 線框</button>
