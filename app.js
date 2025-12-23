@@ -1,5 +1,5 @@
-// Pop-up Card Designer - Core Application Logic
-// Using Three.js for 3D Rendering
+// Pop-up Card Designer - Enhanced Core Application Logic
+// With mouse interaction and extended paper/joining support
 
 class PopupCardDesigner {
     constructor() {
@@ -14,8 +14,15 @@ class PopupCardDesigner {
         this.cardHeight = 20;
         this.baseCardType = '300gsm';
         this.elementCardType = '220gsm';
+        this.joinType = 'glue';
         this.cardColor = 'white';
         this.complexity = 2;
+
+        // 滑鼠控制变數
+        this.isDragging = false;
+        this.previousMousePosition = { x: 0, y: 0 };
+        this.modelRotation = { x: 0, y: 0 };
+        this.cameraDistance = 30;
 
         this.mechanismNames = {
             'vfold': 'V型摺',
@@ -25,8 +32,24 @@ class PopupCardDesigner {
             'spinner': '旋轉機關'
         };
 
+        this.joinTypeNames = {
+            'glue': '白膠',
+            'doubletape': '雙面膠',
+            'slotjoin': '插接式',
+            'foldpin': '摺痕銷釘'
+        };
+
+        this.structureHints = {
+            'vfold': '💡 V型摺：最基礎，適合人物、樹木、简單建築',
+            'parallel': '💡 平行摺：創造層次感，適合建築美景',
+            'floating': '💡 懸浮層：最高级，較載最複雜，適合結成陣效',
+            'pulltab': '💡 拉動機關：加入互動性，適合勘探推痕',
+            'spinner': '💡 旋轉機關：需要精確設計釣點，效果最佳'
+        };
+
         this.initThreeJS();
         this.setupEventListeners();
+        this.setupMouseControls();
         this.createInitialModel();
         this.animate();
     }
@@ -68,6 +91,202 @@ class PopupCardDesigner {
         window.addEventListener('resize', () => this.onWindowResize());
     }
 
+    setupMouseControls() {
+        const canvas = document.getElementById('canvas');
+
+        // 滑鼠按下
+        canvas.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        // 滑鼠移動
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isDragging) return;
+
+            const deltaX = e.clientX - this.previousMousePosition.x;
+            const deltaY = e.clientY - this.previousMousePosition.y;
+
+            // 拖轉控制
+            this.modelRotation.y += deltaX * 0.01;
+            this.modelRotation.x += deltaY * 0.01;
+
+            // 限制X軸旋轉
+            this.modelRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.modelRotation.x));
+
+            if (this.cardModel) {
+                this.cardModel.rotation.x = this.modelRotation.x;
+                this.cardModel.rotation.y = this.modelRotation.y;
+            }
+
+            // 更新滑桿值
+            document.getElementById('rotateX').value = (this.modelRotation.x * 180 / Math.PI).toFixed(0);
+            document.getElementById('rotateY').value = (this.modelRotation.y * 180 / Math.PI).toFixed(0);
+
+            this.previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        // 滑鼠放開
+        document.addEventListener('mouseup', () => {
+            this.isDragging = false;
+        });
+
+        // 防止移出畫布時中斷
+        canvas.addEventListener('mouseleave', () => {
+            this.isDragging = false;
+        });
+
+        // 溻輪縮放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const delta = e.deltaY > 0 ? 1.1 : 0.9;
+            this.cameraDistance *= delta;
+            this.cameraDistance = Math.max(15, Math.min(60, this.cameraDistance));
+
+            this.camera.position.z = this.cameraDistance;
+
+            // 更新縮放滑桿
+            const scaleValue = 30 / this.cameraDistance;
+            document.getElementById('scale').value = scaleValue.toFixed(2);
+        }, { passive: false });
+    }
+
+    setupEventListeners() {
+        // Mechanism selection
+        document.querySelectorAll('.option-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                document.querySelectorAll('.option-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                this.mechanism = item.dataset.mechanism;
+                this.updateMechanismInfo();
+                this.createInitialModel();
+            });
+        });
+
+        // Color selection
+        document.querySelectorAll('.color-option').forEach(item => {
+            item.addEventListener('click', (e) => {
+                document.querySelectorAll('.color-option').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                this.cardColor = item.dataset.color;
+                this.createInitialModel();
+            });
+        });
+
+        // Card dimensions
+        document.getElementById('cardWidth').addEventListener('change', (e) => {
+            this.cardWidth = parseFloat(e.target.value);
+            this.updateCardInfo();
+            this.createInitialModel();
+        });
+
+        document.getElementById('cardHeight').addEventListener('change', (e) => {
+            this.cardHeight = parseFloat(e.target.value);
+            this.updateCardInfo();
+            this.createInitialModel();
+        });
+
+        // Paper types
+        document.getElementById('baseCardType').addEventListener('change', (e) => {
+            this.baseCardType = e.target.value;
+            this.updateCardInfo();
+        });
+
+        document.getElementById('elementCardType').addEventListener('change', (e) => {
+            this.elementCardType = e.target.value;
+            this.updateCardInfo();
+        });
+
+        // Join type
+        document.getElementById('joinType').addEventListener('change', (e) => {
+            this.joinType = e.target.value;
+            this.updateCardInfo();
+        });
+
+        // Complexity slider
+        document.getElementById('complexity').addEventListener('input', (e) => {
+            this.complexity = parseInt(e.target.value);
+            document.getElementById('complexityValue').textContent = this.complexity;
+            this.updateCardInfo();
+        });
+
+        // Rotation controls
+        document.getElementById('rotateX').addEventListener('input', (e) => {
+            const angleX = parseFloat(e.target.value) * Math.PI / 180;
+            this.modelRotation.x = angleX;
+            this.cardModel.rotation.x = angleX;
+        });
+
+        document.getElementById('rotateY').addEventListener('input', (e) => {
+            const angleY = parseFloat(e.target.value) * Math.PI / 180;
+            this.modelRotation.y = angleY;
+            this.cardModel.rotation.y = angleY;
+        });
+
+        // Scale control
+        document.getElementById('scale').addEventListener('input', (e) => {
+            const scale = parseFloat(e.target.value);
+            this.cameraDistance = 30 / scale;
+            this.camera.position.z = this.cameraDistance;
+        });
+
+        // Animation controls
+        document.getElementById('playAnimation').addEventListener('click', () => {
+            this.isAnimating = !this.isAnimating;
+            document.getElementById('playAnimation').textContent = this.isAnimating ? '⏸ 停止' : '▶ 動畫';
+        });
+
+        document.getElementById('resetView').addEventListener('click', () => {
+            document.getElementById('rotateX').value = 0;
+            document.getElementById('rotateY').value = 0;
+            document.getElementById('scale').value = 1;
+            this.modelRotation = { x: 0, y: 0 };
+            this.cameraDistance = 30;
+            this.camera.position.z = 30;
+            this.cardModel.rotation.set(0, 0, 0);
+        });
+
+        document.getElementById('toggleWireframe').addEventListener('click', () => {
+            this.toggleWireframe();
+        });
+
+        // Create button
+        document.getElementById('createBtn').addEventListener('click', () => {
+            this.createInitialModel();
+            this.showSuccessMessage('模型已更新！');
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Export buttons
+        document.getElementById('exportPDF').addEventListener('click', () => {
+            this.exportToPDF();
+        });
+
+        document.getElementById('exportImage').addEventListener('click', () => {
+            this.exportAsImage();
+        });
+
+        document.getElementById('exportData').addEventListener('click', () => {
+            this.exportAsJSON();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const targetTab = e.target.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+    }
+
     createInitialModel() {
         // Remove old model
         if (this.cardModel) {
@@ -96,6 +315,10 @@ class PopupCardDesigner {
                 this.createSpinnerCard();
                 break;
         }
+
+        // Restore rotation state
+        this.cardModel.rotation.x = this.modelRotation.x;
+        this.cardModel.rotation.y = this.modelRotation.y;
     }
 
     createVFoldCard() {
@@ -116,28 +339,22 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // V-fold element (bird's beak shape)
+        // V-fold element
         const vFoldGroup = new THREE.Group();
         
-        // Create triangular prism for V-fold
         const triangleShape = new THREE.Shape();
         triangleShape.moveTo(0, 0);
         triangleShape.lineTo(-width / 3, height / 2);
         triangleShape.lineTo(width / 3, height / 2);
         triangleShape.lineTo(0, 0);
 
-        const extrudeSettings = {
-            depth: 1,
-            bevelEnabled: false
-        };
-
+        const extrudeSettings = { depth: 1, bevelEnabled: false };
         const vFoldGeom = new THREE.ExtrudeGeometry(triangleShape, extrudeSettings);
         const vFoldMesh = new THREE.Mesh(vFoldGeom, material);
         vFoldMesh.position.z = 0.5;
         vFoldMesh.castShadow = true;
         vFoldGroup.add(vFoldMesh);
 
-        // Add small decorative element on top
         const sphereGeom = new THREE.SphereGeometry(0.5, 16, 16);
         const sphere = new THREE.Mesh(sphereGeom, this.getElementMaterial());
         sphere.position.set(0, height / 2 + 1, 0.5);
@@ -165,7 +382,7 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Create stacked boxes for parallel fold effect
+        // Stacked boxes
         const boxHeight = height / 3;
         const elementMaterial = this.getElementMaterial();
 
@@ -244,7 +461,7 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Main mechanism - moving element
+        // Main mechanism
         const mainGeom = new THREE.BoxGeometry(width * 0.6, height * 0.5, 0.08);
         const mainMaterial = this.getElementMaterial();
         this.pullTabElement = new THREE.Mesh(mainGeom, mainMaterial);
@@ -286,7 +503,7 @@ class PopupCardDesigner {
         pivot.castShadow = true;
         this.cardModel.add(pivot);
 
-        // Spinning element (butterfly-like)
+        // Spinning element
         const spinnerGroup = new THREE.Group();
         const wingGeom = new THREE.PlaneGeometry(2, 3);
         const wingMaterial = this.getElementMaterial();
@@ -330,134 +547,12 @@ class PopupCardDesigner {
         });
     }
 
-    setupEventListeners() {
-        // Mechanism selection
-        document.querySelectorAll('.option-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                document.querySelectorAll('.option-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                this.mechanism = item.dataset.mechanism;
-                this.updateMechanismInfo();
-                this.createInitialModel();
-            });
-        });
-
-        // Color selection
-        document.querySelectorAll('.color-option').forEach(item => {
-            item.addEventListener('click', (e) => {
-                document.querySelectorAll('.color-option').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                this.cardColor = item.dataset.color;
-                this.createInitialModel();
-            });
-        });
-
-        // Card dimensions
-        document.getElementById('cardWidth').addEventListener('change', (e) => {
-            this.cardWidth = parseFloat(e.target.value);
-            this.updateCardInfo();
-            this.createInitialModel();
-        });
-
-        document.getElementById('cardHeight').addEventListener('change', (e) => {
-            this.cardHeight = parseFloat(e.target.value);
-            this.updateCardInfo();
-            this.createInitialModel();
-        });
-
-        // Paper types
-        document.getElementById('baseCardType').addEventListener('change', (e) => {
-            this.baseCardType = e.target.value;
-            this.updateCardInfo();
-        });
-
-        document.getElementById('elementCardType').addEventListener('change', (e) => {
-            this.elementCardType = e.target.value;
-            this.updateCardInfo();
-        });
-
-        // Complexity slider
-        document.getElementById('complexity').addEventListener('input', (e) => {
-            this.complexity = parseInt(e.target.value);
-            document.getElementById('complexityValue').textContent = this.complexity;
-        });
-
-        // Rotation controls
-        document.getElementById('rotateX').addEventListener('input', (e) => {
-            const angleX = parseFloat(e.target.value) * Math.PI / 180;
-            this.cardModel.rotation.x = angleX;
-        });
-
-        document.getElementById('rotateY').addEventListener('input', (e) => {
-            const angleY = parseFloat(e.target.value) * Math.PI / 180;
-            this.cardModel.rotation.y = angleY;
-        });
-
-        // Scale control
-        document.getElementById('scale').addEventListener('input', (e) => {
-            const scale = parseFloat(e.target.value);
-            this.cardModel.scale.set(scale, scale, scale);
-        });
-
-        // Animation controls
-        document.getElementById('playAnimation').addEventListener('click', () => {
-            this.isAnimating = !this.isAnimating;
-            document.getElementById('playAnimation').textContent = this.isAnimating ? '⏸ 停止' : '▶ 動畫';
-        });
-
-        document.getElementById('resetView').addEventListener('click', () => {
-            document.getElementById('rotateX').value = 0;
-            document.getElementById('rotateY').value = 0;
-            document.getElementById('scale').value = 1;
-            this.cardModel.rotation.set(0, 0, 0);
-            this.cardModel.scale.set(1, 1, 1);
-        });
-
-        document.getElementById('toggleWireframe').addEventListener('click', () => {
-            this.toggleWireframe();
-        });
-
-        // Create button
-        document.getElementById('createBtn').addEventListener('click', () => {
-            this.createInitialModel();
-            this.showSuccessMessage('模型已建立！');
-        });
-
-        // Reset button
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            location.reload();
-        });
-
-        // Export buttons
-        document.getElementById('exportPDF').addEventListener('click', () => {
-            this.exportToPDF();
-        });
-
-        document.getElementById('exportImage').addEventListener('click', () => {
-            this.exportAsImage();
-        });
-
-        document.getElementById('exportData').addEventListener('click', () => {
-            this.exportAsJSON();
-        });
-
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                const targetTab = e.target.dataset.tab;
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                e.target.classList.add('active');
-                document.getElementById(targetTab).classList.add('active');
-            });
-        });
-    }
-
     updateCardInfo() {
         document.getElementById('infoWidth').textContent = this.cardWidth.toFixed(1);
         document.getElementById('infoHeight').textContent = this.cardHeight.toFixed(1);
         document.getElementById('infoBase').textContent = this.baseCardType.toUpperCase();
         document.getElementById('infoElement').textContent = this.elementCardType.toUpperCase();
+        document.getElementById('infoJoin').textContent = this.joinTypeNames[this.joinType];
 
         const area = this.cardWidth * this.cardHeight;
         document.getElementById('statArea').textContent = area.toFixed(0);
@@ -468,12 +563,13 @@ class PopupCardDesigner {
 
     updateMechanismInfo() {
         document.getElementById('infoMechanism').textContent = this.mechanismNames[this.mechanism];
+        document.getElementById('structureHint').textContent = this.structureHints[this.mechanism];
         this.updateMaterialRecommendation();
     }
 
     updateMaterialRecommendation() {
         const recommendations = {
-            'vfold': '使用300 GSM的卡紙作為基底，確保足夠硬度支撐立體結構。元件應選擇220 GSM，保持靈活性同時避免軟塌。摺線應與紙張的絲流平行。',
+            'vfold': '使用300 GSM的卡紙作為基底，確保足夠硬度支撐立體結構。元件應選擇220 GSM，保持靈活性同時避免軟塌。摺線應與紙張絲流平行。',
             'parallel': '建議使用最硬的300-350 GSM作為基底，因為多層堆疊會增加壓力。元件層建議200 GSM，確保層與層之間的清晰分離。',
             'floating': '這種結構需要精確的支撐條設計。基底採用300 GSM，側支撐條用220 GSM。懸浮層建議使用180-200 GSM，保持輕盈感。',
             'pulltab': '基底需要300 GSM提供穩定支撐。移動元件採用220 GSM。軌道設計必須精確，避免機關被拉脫或卡住。',
@@ -494,7 +590,7 @@ class PopupCardDesigner {
     animate() {
         this.animationId = requestAnimationFrame(() => this.animate());
 
-        // Auto-animation for different mechanisms
+        // Auto-animation
         if (this.isAnimating) {
             const time = Date.now() * 0.001;
 
@@ -544,6 +640,7 @@ class PopupCardDesigner {
             cardHeight: this.cardHeight,
             baseCardType: this.baseCardType,
             elementCardType: this.elementCardType,
+            joinType: this.joinType,
             cardColor: this.cardColor,
             complexity: this.complexity,
             timestamp: new Date().toISOString()
@@ -587,5 +684,5 @@ class PopupCardDesigner {
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const app = new PopupCardDesigner();
-    console.log('Pop-up Card Designer initialized');
+    console.log('Pop-up Card Designer initialized with mouse controls and extended features');
 });
