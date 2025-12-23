@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>立體卡片設計工具 | Pop-up Card Designer</title>
+    <title>Pop-up Card Designer | Professional CAD Tool</title>
     <style>
         * {
             margin: 0;
@@ -12,350 +12,331 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px;
-        }
-
-        .container {
-            max-width: 1800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            height: 100vh;
             overflow: hidden;
-            display: flex;
-            height: 100vh;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: absolute;
-            width: 100%;
-            top: 0;
-            z-index: 50;
-        }
-
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            display: flex;
-            height: 100vh;
-            margin-top: 80px;
-        }
-
-        .left-panel {
-            width: 350px;
-            background: #f8f9fa;
-            border-right: 1px solid #e0e0e0;
-            overflow-y: auto;
-            padding: 20px;
-            box-shadow: inset -2px 0 5px rgba(0,0,0,0.05);
-        }
-
-        .panel-section {
-            margin-bottom: 30px;
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .panel-section h3 {
-            color: #667eea;
-            font-size: 1.1em;
-            margin-bottom: 15px;
+        /* === TOP MENU BAR === */
+        .menu-bar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
+            padding: 8px 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 15px;
+            height: 40px;
         }
 
-        .section-icon {
-            font-size: 1.3em;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85em;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
+        .menu-item {
+            color: #b0b0b0;
+            font-size: 13px;
             cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 3px;
+            transition: all 0.2s;
         }
 
-        .button-group {
+        .menu-item:hover {
+            background: #404040;
+            color: #ffffff;
+        }
+
+        .logo {
+            font-weight: bold;
+            color: #00bfff;
+            font-size: 14px;
+            margin-right: 20px;
+            border-right: 1px solid #3d3d3d;
+            padding-right: 20px;
+        }
+
+        /* === MAIN LAYOUT === */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 40px);
+        }
+
+        /* === LEFT TOOLBAR === */
+        .left-toolbar {
+            width: 50px;
+            background: #252525;
+            border-right: 1px solid #3d3d3d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+            gap: 5px;
+            overflow-y: auto;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            border-radius: 3px;
+            color: #a0a0a0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            background: #404040;
+            color: #ffffff;
+            border-color: #00bfff;
+        }
+
+        .tool-btn.active {
+            background: #00bfff;
+            color: #000;
+            border-color: #00bfff;
+        }
+
+        .tool-separator {
+            width: 30px;
+            height: 1px;
+            background: #3d3d3d;
+            margin: 5px 0;
+        }
+
+        /* === TOP TOOLBAR === */
+        .top-toolbar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
+            padding: 8px 15px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            height: 45px;
+            overflow-x: auto;
+        }
+
+        .toolbar-group {
             display: flex;
             gap: 8px;
+            align-items: center;
+            border-right: 1px solid #3d3d3d;
+            padding-right: 15px;
         }
 
-        button {
-            flex: 1;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            background: #3d3d3d;
+            border: 1px solid #4d4d4d;
+            color: #a0a0a0;
+            padding: 6px 12px;
+            border-radius: 3px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9em;
+            font-size: 12px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .toolbar-btn:hover {
+            background: #404040;
+            color: #ffffff;
+            border-color: #00bfff;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        .toolbar-btn.primary {
+            background: #00bfff;
+            color: #000;
+            border-color: #00bfff;
         }
 
-        .btn-secondary {
-            background: #e8eaf6;
-            color: #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #dde2f0;
-        }
-
-        .btn-small {
-            padding: 6px 10px;
-            font-size: 0.8em;
-        }
-
-        .option-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .option-item {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .option-item:hover {
-            border-color: #667eea;
-            background: #f5f7ff;
-        }
-
-        .option-item.active {
-            border-color: #667eea;
-            background: #e8eaf6;
-            color: #667eea;
-        }
-
-        .option-item-icon {
-            font-size: 2em;
-            margin-bottom: 8px;
-        }
-
-        .option-item-text {
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-
-        .center-panel {
+        /* === MAIN WORKSPACE === */
+        .workspace {
             flex: 1;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
-        #canvas {
+        .canvas-area {
             flex: 1;
-            width: 100%;
+            position: relative;
+            background: #1a1a1a;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas {
             display: block;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
             cursor: grab;
+            border: 1px solid #3d3d3d;
         }
 
         #canvas:active {
             cursor: grabbing;
         }
 
-        .hint-badge {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 0.85em;
-            color: #667eea;
-            font-weight: 600;
-            z-index: 40;
-            pointer-events: none;
-            animation: fadeInOut 4s ease;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-            10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        .canvas-controls {
-            background: white;
-            border-top: 1px solid #e0e0e0;
-            padding: 12px 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-        }
-
-        .control-group {
+        /* === RULERS === */
+        .ruler-h {
+            height: 20px;
+            background: #252525;
+            border-bottom: 1px solid #3d3d3d;
             display: flex;
             align-items: center;
-            gap: 10px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .control-group label {
-            margin: 0;
-            font-size: 0.85em;
-            white-space: nowrap;
-        }
-
-        .control-group input[type="range"] {
-            width: 150px;
-        }
-
-        .animation-controls {
+        .ruler-v {
+            width: 20px;
+            background: #252525;
+            border-right: 1px solid #3d3d3d;
             display: flex;
-            gap: 8px;
+            flex-direction: column;
             align-items: center;
-            flex-wrap: wrap;
+            overflow: hidden;
+            position: relative;
         }
 
-        .animation-controls button {
-            padding: 8px 15px;
-            font-size: 0.85em;
+        .ruler-mark {
+            color: #666;
+            font-size: 8px;
+            text-align: center;
         }
 
+        /* === RIGHT PANEL === */
         .right-panel {
-            width: 350px;
-            background: #f8f9fa;
-            border-left: 1px solid #e0e0e0;
+            width: 320px;
+            background: #2d2d2d;
+            border-left: 1px solid #3d3d3d;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #252525;
+            padding: 12px 15px;
+            border-bottom: 1px solid #3d3d3d;
+            font-size: 12px;
+            font-weight: bold;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .panel-content {
+            flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            box-shadow: inset 2px 0 5px rgba(0,0,0,0.05);
-        }
-
-        .info-card {
-            background: white;
-            border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid #667eea;
         }
 
-        .info-card h4 {
-            color: #667eea;
+        .panel-section {
+            margin-bottom: 20px;
+        }
+
+        .panel-section-title {
+            color: #00bfff;
+            font-size: 12px;
+            font-weight: bold;
             margin-bottom: 10px;
-            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #3d3d3d;
+            padding-bottom: 8px;
         }
 
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.85em;
-            color: #666;
-            border-bottom: 1px solid #eee;
+        .property-item {
+            margin-bottom: 10px;
+            font-size: 12px;
         }
 
-        .info-item:last-child {
-            border-bottom: none;
+        .property-label {
+            color: #808080;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 11px;
         }
 
-        .info-value {
-            font-weight: 600;
-            color: #333;
+        .property-value {
+            background: #1a1a1a;
+            border: 1px solid #3d3d3d;
+            padding: 6px 8px;
+            color: #e0e0e0;
+            border-radius: 2px;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
         }
 
-        .material-recommendation {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            color: #856404;
-            margin-bottom: 15px;
+        input[type="number"],
+        input[type="text"],
+        select,
+        input[type="checkbox"] {
+            background: #1a1a1a;
+            border: 1px solid #3d3d3d;
+            color: #e0e0e0;
+            padding: 6px 8px;
+            border-radius: 2px;
+            font-size: 11px;
+            font-family: inherit;
         }
 
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .tab {
-            padding: 10px 15px;
+        input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
             cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #666;
-            font-weight: 500;
-            font-size: 0.9em;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
         }
 
-        .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #00bfff;
+            box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+        }
+
+        /* === TABS === */
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #3d3d3d;
+            background: #252525;
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            color: #808080;
+            cursor: pointer;
+            font-size: 11px;
+            border-right: 1px solid #3d3d3d;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .panel-tab:last-child {
+            border-right: none;
+        }
+
+        .panel-tab:hover {
+            background: #2d2d2d;
+            color: #a0a0a0;
+        }
+
+        .panel-tab.active {
+            color: #00bfff;
+            border-bottom: 2px solid #00bfff;
+            margin-bottom: -1px;
         }
 
         .tab-content {
@@ -366,50 +347,61 @@
             display: block;
         }
 
-        .layer-item {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
+        /* === STATUS BAR === */
+        .status-bar {
+            height: 25px;
+            background: #1a1a1a;
+            border-top: 1px solid #3d3d3d;
             display: flex;
             align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
+            padding: 0 15px;
+            font-size: 11px;
+            color: #808080;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* === LAYER TREE === */
+        .layer-item {
+            background: #1a1a1a;
+            border: 1px solid #3d3d3d;
+            margin-bottom: 4px;
+            padding: 8px 10px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
         }
 
         .layer-item:hover {
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
+            background: #2a2a3a;
+            border-color: #00bfff;
+        }
+
+        .layer-item.active {
+            background: #00bfff;
+            color: #000;
+            border-color: #00bfff;
         }
 
         .layer-color {
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            border: 2px solid #ddd;
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid #4d4d4d;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .layer-color:hover {
-            transform: scale(1.1);
-        }
-
-        .layer-info {
-            flex: 1;
         }
 
         .layer-name {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .layer-color-hex {
-            font-size: 0.75em;
-            color: #999;
-            font-family: monospace;
+            flex: 1;
         }
 
         .layer-controls {
@@ -418,497 +410,357 @@
         }
 
         .layer-btn {
-            padding: 4px 8px;
-            font-size: 0.75em;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            width: 20px;
+            height: 20px;
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: #a0a0a0;
+            border-radius: 2px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: all 0.2s;
         }
 
         .layer-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
+            background: #00bfff;
+            color: #000;
+            border-color: #00bfff;
         }
 
-        .layer-color-btn {
-            flex: 1;
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
         }
 
-        .layer-delete-btn {
-            flex: 1;
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
         }
 
-        .tutorial-step {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .tutorial-step h5 {
-            color: #667eea;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-        }
-
-        .tutorial-step p {
-            font-size: 0.8em;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .step-number {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 24px;
-            font-size: 0.7em;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        input[type="range"] {
-            cursor: pointer;
-        }
-
-        .color-picker {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .color-option {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-
-        .color-option.active {
-            border-color: #333;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #667eea;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px;
+        ::-webkit-scrollbar-thumb {
+            background: #404040;
             border-radius: 6px;
-            text-align: center;
         }
 
-        .stat-box-value {
-            font-size: 1.3em;
-            font-weight: bold;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #505050;
         }
 
-        .stat-box-label {
-            font-size: 0.75em;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-
-        .export-section {
-            margin-top: 15px;
-        }
-
-        .export-button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 8px;
-        }
-
-        .export-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .warning-box {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            color: #721c24;
-            margin-bottom: 15px;
-        }
-
-        .success-box {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            color: #155724;
-            margin-bottom: 15px;
-        }
-
-        .paper-spec {
-            background: #f0f0f0;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-top: 6px;
-            color: #555;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-        }
-
-        .left-panel::-webkit-scrollbar,
-        .right-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .left-panel::-webkit-scrollbar-track,
-        .right-panel::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        .left-panel::-webkit-scrollbar-thumb,
-        .right-panel::-webkit-scrollbar-thumb {
-            background: #888;
+        /* === TOOLTIP === */
+        .tooltip {
+            position: absolute;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 6px 10px;
+            border: 1px solid #3d3d3d;
             border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .left-panel::-webkit-scrollbar-thumb:hover,
-        .right-panel::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .tool-btn:hover .tooltip {
+            opacity: 1;
         }
 
-        @media (max-width: 1400px) {
-            .left-panel, .right-panel {
-                width: 300px;
+        /* === SUCCESS MESSAGE === */
+        .success-box {
+            background: #1a3a1a;
+            border-left: 3px solid #28a745;
+            color: #90ee90;
+            padding: 10px 15px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
             }
         }
 
-        @media (max-width: 1200px) {
-            .main-content {
-                flex-direction: column;
-            }
+        /* === HINT BADGE === */
+        .hint-badge {
+            position: absolute;
+            top: 20px;
+            right: 350px;
+            background: rgba(0, 191, 255, 0.1);
+            border: 1px solid #00bfff;
+            color: #00bfff;
+            padding: 8px 15px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 40;
+            pointer-events: none;
+            animation: fadeInOut 4s ease;
+        }
 
-            .left-panel, .right-panel {
-                width: 100%;
-                max-height: 40vh;
-            }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
 
-            #canvas {
-                min-height: 400px;
-            }
+        /* === DIMENSION DISPLAY === */
+        .dimension-display {
+            position: absolute;
+            background: rgba(0, 191, 255, 0.1);
+            border: 1px solid #00bfff;
+            padding: 4px 8px;
+            border-radius: 2px;
+            color: #00bfff;
+            font-size: 10px;
+            font-family: monospace;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎨 立體卡片設計工具</h1>
-            <p>Pop-up Card Designer | 3D結構建模 × 設計工作流程 × 材料計算</p>
+    <!-- MENU BAR -->
+    <div class="menu-bar">
+        <div class="logo">🎨 POP-UP CARD CAD</div>
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Insert</div>
+        <div class="menu-item">Format</div>
+        <div class="menu-item">Tools</div>
+        <div style="margin-left: auto; display: flex; gap: 10px;">
+            <div class="menu-item">Help</div>
+            <div class="menu-item">Settings</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- LEFT TOOLBAR -->
+        <div class="left-toolbar">
+            <div class="tool-btn active" title="Select Tool">
+                ▲
+                <div class="tooltip">Select (S)</div>
+            </div>
+            <div class="tool-btn" title="Rotate">
+                ⟲
+                <div class="tooltip">Rotate (R)</div>
+            </div>
+            <div class="tool-btn" title="Scale">
+                ⟡
+                <div class="tooltip">Scale (Sc)</div>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-btn" title="Add Paper">
+                ✚
+                <div class="tooltip">Add Layer</div>
+            </div>
+            <div class="tool-btn" title="Delete">
+                🗑
+                <div class="tooltip">Delete</div>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-btn" title="Flip Card">
+                ⟷
+                <div class="tooltip">Flip</div>
+            </div>
+            <div class="tool-btn" title="Play Animation">
+                ▶
+                <div class="tooltip">Play</div>
+            </div>
         </div>
 
-        <div class="main-content">
-            <!-- 左側面板：設計參數 -->
-            <div class="left-panel">
-                <!-- 基本信息 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">📋</span> 卡片基本信息</h3>
-                    <div class="form-group">
-                        <label for="projectName">項目名稱</label>
-                        <input type="text" id="projectName" placeholder="例：聖誕節立體卡片">
-                    </div>
-                    <div class="form-group">
-                        <label for="cardWidth">卡片寬度 (cm)</label>
-                        <input type="number" id="cardWidth" min="5" max="30" value="15" step="0.5">
-                    </div>
-                    <div class="form-group">
-                        <label for="cardHeight">卡片高度 (cm)</label>
-                        <input type="number" id="cardHeight" min="5" max="30" value="20" step="0.5">
-                    </div>
+        <!-- TOP TOOLBAR -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="top-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn">📁 New</button>
+                    <button class="toolbar-btn">💾 Save</button>
+                    <button class="toolbar-btn">📤 Export</button>
                 </div>
-
-                <!-- 結構類型 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">🏗️</span> 核心結構</h3>
-                    <div class="option-grid">
-                        <div class="option-item active" data-mechanism="vfold">
-                            <div class="option-item-icon">V</div>
-                            <div class="option-item-text">V型摺</div>
-                        </div>
-                        <div class="option-item" data-mechanism="parallel">
-                            <div class="option-item-icon">⬜</div>
-                            <div class="option-item-text">平行摺</div>
-                        </div>
-                        <div class="option-item" data-mechanism="floating">
-                            <div class="option-item-icon">⋯</div>
-                            <div class="option-item-text">懸浮層</div>
-                        </div>
-                        <div class="option-item" data-mechanism="pulltab">
-                            <div class="option-item-icon">→</div>
-                            <div class="option-item-text">拉動機關</div>
-                        </div>
-                        <div class="option-item" data-mechanism="spinner">
-                            <div class="option-item-icon">⟲</div>
-                            <div class="option-item-text">旋轉機關</div>
-                        </div>
-                    </div>
-                    <div class="paper-spec" id="structureHint">💡 V型摺：最基礎，適合人物、樹木、簡單建築</div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn">↶ Undo</button>
+                    <button class="toolbar-btn">↷ Redo</button>
                 </div>
-
-                <!-- 紙張管理 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">📄</span> 紙張管理</h3>
-                    <div class="form-group" style="text-align: center; color: #666; font-size: 0.85em; margin-bottom: 12px;">
-                        紙張数：<strong id="paperCount">1</strong>层
-                    </div>
-                    <button class="btn-primary btn-small" id="addPaperLayer" style="width: 100%; flex: none; margin-bottom: 12px;">📄 新增紙張</button>
-                    <button class="btn-secondary btn-small" id="showPaperAnimation" style="width: 100%; flex: none; margin-bottom: 12px;">🎬 紙張層數動畫</button>
-                    <div class="paper-spec">為一次專針新增紙張或上色。</div>
-                </div>
-
-                <!-- 音效設定 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">🔊</span> 音效設定</h3>
-                    <div class="checkbox-wrapper">
+                <div class="toolbar-group">
+                    <label style="display: flex; align-items: center; gap: 5px; color: #a0a0a0; font-size: 11px;">
                         <input type="checkbox" id="soundToggle" checked>
-                        <label for="soundToggle" style="margin: 0; flex: 1;">翻頁音效</label>
-                    </div>
-                    <div class="paper-spec">開闔卡片、新增/刪除紙張時會輸出音效。</div>
+                        🔊 Sound
+                    </label>
                 </div>
-
-                <!-- 接合方式 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">🔗</span> 接合方式</h3>
-                    <div class="form-group">
-                        <label for="joinType">選擇接合方式</label>
-                        <select id="joinType">
-                            <option value="glue">白膠（推薦）</option>
-                            <option value="doubletape">雙面膠</option>
-                            <option value="slotjoin">插接式接合</option>
-                            <option value="foldpin">摺痕銷釘</option>
-                        </select>
-                    </div>
-                    <div class="paper-spec">白膠：黏性強，乾燥透明。雙面膠：快速乾淨。插接式：不需膠水。</div>
+                <div class="toolbar-group">
+                    <input type="number" id="cardWidth" min="5" max="30" value="15" style="width: 60px;" placeholder="Width">
+                    <span style="color: #808080;">×</span>
+                    <input type="number" id="cardHeight" min="5" max="30" value="20" style="width: 60px;" placeholder="Height">
+                    <span style="color: #808080; font-size: 11px;">cm</span>
                 </div>
-
-                <!-- 紙張見賜 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">📄</span> 紙張見賜</h3>
-                    <div class="form-group">
-                        <label for="baseCardType">基底卡片</label>
-                        <select id="baseCardType">
-                            <option value="250gsm">250 GSM (標準)</option>
-                            <option value="300gsm" selected>300 GSM (推薦)</option>
-                            <option value="350gsm">350 GSM (厚重)</option>
-                            <option value="400gsm">400 GSM (特厚)</option>
-                        </select>
-                        <div class="paper-spec">GSM = 克重/平方米。數字越大，紙張越硬。</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="elementCardType">立體元件</label>
-                        <select id="elementCardType">
-                            <option value="180gsm">180 GSM (輕薄)</option>
-                            <option value="200gsm">200 GSM</option>
-                            <option value="220gsm" selected>220 GSM (推薦)</option>
-                            <option value="240gsm">240 GSM (厚)</option>
-                        </select>
-                        <div class="paper-spec">建議比基底輕，保持靈活性。</div>
-                    </div>
-                </div>
-
-                <!-- 風格設定 -->
-                <div class="panel-section">
-                    <h3><span class="section-icon">🎨</span> 風格設定</h3>
-                    <div class="form-group">
-                        <label>卡片顏色</label>
-                        <div class="color-picker">
-                            <div class="color-option active" style="background: white;" data-color="white" title="白色"></div>
-                            <div class="color-option" style="background: #ffe8b6;" data-color="cream" title="米色"></div>
-                            <div class="color-option" style="background: #ffd4d4;" data-color="pink" title="粉紅"></div>
-                            <div class="color-option" style="background: #d4f1ff;" data-color="blue" title="天藍"></div>
-                            <div class="color-option" style="background: #e8d4ff;" data-color="purple" title="紫色"></div>
-                            <div class="color-option" style="background: #d4ffd4;" data-color="green" title="綠色"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="complexity">複雜度</label>
-                        <input type="range" id="complexity" min="1" max="5" value="2">
-                        <small style="color: #666; display: block; margin-top: 4px;">
-                            <span id="complexityValue">2</span> / 5
-                        </small>
-                    </div>
-                </div>
-
-                <!-- 快速操作 -->
-                <div class="button-group">
-                    <button class="btn-primary" id="createBtn">✨ 建立模型</button>
-                    <button class="btn-secondary" id="resetBtn">🔄 重置</button>
+                <div class="toolbar-group">
+                    <label style="color: #a0a0a0; font-size: 11px;">Scale:</label>
+                    <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1" style="width: 120px;">
+                    <span id="scaleValue" style="color: #a0a0a0; font-size: 11px; min-width: 35px;">100%</span>
                 </div>
             </div>
 
-            <!-- 中央：3D預覽畫布 -->
-            <div class="center-panel">
-                <div class="hint-badge">👆 拖曳鼠標進行有由掛團 | 滾輪縮放</div>
-                <canvas id="canvas"></canvas>
-                <div class="canvas-controls">
-                    <div class="control-group">
-                        <label>旋轉：X</label>
-                        <input type="range" id="rotateX" min="-180" max="180" value="0">
+            <!-- WORKSPACE -->
+            <div class="workspace">
+                <div style="display: flex; flex: 1;">
+                    <!-- VERTICAL RULER -->
+                    <div class="ruler-v" id="rulerV"></div>
+
+                    <!-- CANVAS AREA -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <!-- HORIZONTAL RULER -->
+                        <div class="ruler-h" id="rulerH"></div>
+
+                        <!-- MAIN CANVAS -->
+                        <div class="canvas-area">
+                            <div class="hint-badge">拖曳以翻開 | 滾輪縮放 | 按鍵快捷</div>
+                            <canvas id="canvas"></canvas>
+                            <div class="dimension-display" id="dimensionDisplay" style="display: none;">15.0 × 20.0 cm</div>
+                        </div>
                     </div>
-                    <div class="control-group">
-                        <label>Y</label>
-                        <input type="range" id="rotateY" min="-180" max="180" value="0">
+                </div>
+
+                <!-- STATUS BAR -->
+                <div class="status-bar">
+                    <div class="status-item">📍 Pos: <span id="posX">0.0</span>, <span id="posY">0.0</span></div>
+                    <div class="status-item">📏 Size: <span id="sizeW">15.0</span> × <span id="sizeH">20.0</span> cm</div>
+                    <div class="status-item">🎨 Layers: <span id="layerCount">1</span></div>
+                    <div class="status-item" style="margin-left: auto;">Ready</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="panel-tabs">
+                <div class="panel-tab active" data-tab="properties">Properties</div>
+                <div class="panel-tab" data-tab="layers">Layers</div>
+                <div class="panel-tab" data-tab="settings">Settings</div>
+            </div>
+
+            <!-- PROPERTIES TAB -->
+            <div class="tab-content active" id="properties">
+                <div class="panel-content">
+                    <div class="panel-section">
+                        <div class="panel-section-title">卡片尺寸</div>
+                        <div class="property-item">
+                            <div class="property-label">寬度 (cm)</div>
+                            <input type="number" id="propWidth" value="15" min="5" max="30" step="0.5">
+                        </div>
+                        <div class="property-item">
+                            <div class="property-label">高度 (cm)</div>
+                            <input type="number" id="propHeight" value="20" min="5" max="30" step="0.5">
+                        </div>
                     </div>
-                    <div class="control-group">
-                        <label>縮放</label>
-                        <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1">
+
+                    <div class="panel-section">
+                        <div class="panel-section-title">結構類型</div>
+                        <div class="property-item">
+                            <select id="mechanism" style="width: 100%;">
+                                <option value="vfold">V 型摺</option>
+                                <option value="parallel">平行摺</option>
+                                <option value="floating">懸浮層</option>
+                                <option value="pulltab">拉動機關</option>
+                                <option value="spinner">旋轉機關</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="animation-controls">
-                        <button class="btn-secondary btn-small" id="openCloseCard">📖 開闔</button>
-                        <button class="btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
-                        <button class="btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
-                        <button class="btn-secondary btn-small" id="toggleWireframe">⬜ 線框</button>
+
+                    <div class="panel-section">
+                        <div class="panel-section-title">紙張規格</div>
+                        <div class="property-item">
+                            <div class="property-label">基底</div>
+                            <select id="baseCard" style="width: 100%;">
+                                <option value="250">250 GSM</option>
+                                <option value="300" selected>300 GSM</option>
+                                <option value="350">350 GSM</option>
+                                <option value="400">400 GSM</option>
+                            </select>
+                        </div>
+                        <div class="property-item">
+                            <div class="property-label">元件</div>
+                            <select id="elementCard" style="width: 100%;">
+                                <option value="180">180 GSM</option>
+                                <option value="200">200 GSM</option>
+                                <option value="220" selected>220 GSM</option>
+                                <option value="240">240 GSM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-section-title">接合方式</div>
+                        <div class="property-item">
+                            <select id="joinType" style="width: 100%;">
+                                <option value="glue" selected>白膠 (推薦)</option>
+                                <option value="doubletape">雙面膠</option>
+                                <option value="slotjoin">插接式</option>
+                                <option value="foldpin">摺痕銷釘</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 右側面板：資訊和教學 -->
-            <div class="right-panel">
-                <div class="tabs">
-                    <button class="tab active" data-tab="layers">📄 圖層</button>
-                    <button class="tab" data-tab="info">📊 資訊</button>
-                    <button class="tab" data-tab="tutorial">📚 教學</button>
-                    <button class="tab" data-tab="export">💾 導出</button>
-                </div>
-
-                <!-- 圖層管理標籤 -->
-                <div id="layers" class="tab-content active">
-                    <div class="info-card">
-                        <h4>📄 紙張圖層</h4>
-                        <div id="layerPanel"></div>
+            <!-- LAYERS TAB -->
+            <div class="tab-content" id="layers">
+                <div class="panel-content">
+                    <div class="panel-section">
+                        <div class="panel-section-title">圖層樹</div>
+                        <div id="layerPanel" style="max-height: 300px; overflow-y: auto;"></div>
+                        <button class="toolbar-btn" id="addLayerBtn" style="width: 100%; margin-top: 10px; justify-content: center;">
+                            ✚ 新增圖層
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- 資訊標籤 -->
-                <div id="info" class="tab-content">
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-box-value" id="statArea">300</div>
-                            <div class="stat-box-label">表面積 (cm²)</div>
+            <!-- SETTINGS TAB -->
+            <div class="tab-content" id="settings">
+                <div class="panel-content">
+                    <div class="panel-section">
+                        <div class="panel-section-title">顯示設定</div>
+                        <div class="property-item">
+                            <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                顯示網格
+                            </label>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-box-value" id="statDepth">8</div>
-                            <div class="stat-box-label">深度 (cm)</div>
+                        <div class="property-item">
+                            <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                顯示標尺
+                            </label>
                         </div>
-                    </div>
-
-                    <div class="info-card">
-                        <h4>📐 卡片見賜</h4>
-                        <div class="info-item">
-                            <span>尺寸</span>
-                            <span class="info-value"><span id="infoWidth">15</span> × <span id="infoHeight">20</span> cm</span>
-                        </div>
-                        <div class="info-item">
-                            <span>基底紙張</span>
-                            <span class="info-value" id="infoBase">300 GSM</span>
-                        </div>
-                        <div class="info-item">
-                            <span>元件紙張</span>
-                            <span class="info-value" id="infoElement">220 GSM</span>
-                        </div>
-                        <div class="info-item">
-                            <span>結構類型</span>
-                            <span class="info-value" id="infoMechanism">V型摺</span>
-                        </div>
-                        <div class="info-item">
-                            <span>接合方式</span>
-                            <span class="info-value" id="infoJoin">白膠</span>
+                        <div class="property-item">
+                            <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                顯示尺寸
+                            </label>
                         </div>
                     </div>
 
-                    <div class="material-recommendation" id="materialRec">
-                        <strong>🎯 材料建議：</strong><br>
-                        使用300 GSM的卡紙作為基底，確保足夠硬度支撐立體結構。元件應選擇220 GSM，保持靈活性同時避免軟塌。摺線應與紙張絲流平行。
-                    </div>
-
-                    <div class="info-card">
-                        <h4>🛠️ 所需工具</h4>
-                        <ul style="font-size: 0.8em; color: #666; list-position: inside;">
-                            <li>✂️ 筆刀 & 切割墊</li>
-                            <li>📏 金屬尺</li>
-                            <li>📝 壓線筆/骨資料筆</li>
-                            <li>🧴 白膠/雙面膠</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- 教學標籤 -->
-                <div id="tutorial" class="tab-content">
-                    <div class="tutorial-step">
-                        <h5><span class="step-number">1</span>拖動翻鼠控制</h5>
-                        <p>點擊并拖動画布上的卡片，翻鼠會直接控制滑动卵的開闔旋轉。上下拖動可以旋轉整個模型。</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <h5><span class="step-number">2</span>新增紙張层次</h5>
-                        <p>點擊左侧【新增紙張】按錠來新增紙張层次。每次添加的紙張會以動畫效果从explode進入模型。</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <h5><span class="step-number">3</span>索寶圖層管理</h5>
-                        <p>按圖層上的🎨按錠可以更改紙張顏色，按🗑️按錠刪除紙張。至少需要保留 1 層紙張。</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <h5><span class="step-number">4</span>新增配置自動保存</h5>
-                        <p>每次上色新增層次時，設計數據會自動保存到测覽器後作穩。下次打開時會基於上次的配置。</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <h5><span class="step-number">5</span>使用紙張層數動畫</h5>
-                        <p>點擊【紙張層數動畫】按錠盔示所有紙張层次一起重新排列演示效果，展示紙張店粘活您的設計。</p>
-                    </div>
-                </div>
-
-                <!-- 導出標籤 -->
-                <div id="export" class="tab-content">
-                    <div class="export-section">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">📦 導出選項</h4>
-                        <button class="export-button" id="exportPDF">📄 導出切割圖 (PDF)</button>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <button class="export-button" id="exportImage" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);">🖼️ 導出3D預覽 (PNG)</button>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <button class="export-button" id="exportData" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">💾 導出設計數據 (JSON)</button>
-                    </div>
-                    <div class="warning-box" style="margin-top: 15px;">
-                        ⚠️ PDF切割圖需要向量設計軟體進一步編輯。建議使用Adobe Illustrator或免費Inkscape。
+                    <div class="panel-section">
+                        <div class="panel-section-title">導出</div>
+                        <button class="toolbar-btn" style="width: 100%; justify-content: center; margin-bottom: 8px;">
+                            💾 匯出 JSON
+                        </button>
+                        <button class="toolbar-btn" style="width: 100%; justify-content: center; margin-bottom: 8px;">
+                            🖼 匯出 PNG
+                        </button>
+                        <button class="toolbar-btn" style="width: 100%; justify-content: center;">
+                            📄 匯出 PDF
+                        </button>
                     </div>
                 </div>
             </div>
