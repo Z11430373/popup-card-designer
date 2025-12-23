@@ -1,5 +1,5 @@
 // Pop-up Card Designer - Enhanced Core Application Logic
-// With mouse interaction and extended paper/joining support
+// With mouse interaction, paper animation, and opening/closing card
 
 class PopupCardDesigner {
     constructor() {
@@ -18,11 +18,22 @@ class PopupCardDesigner {
         this.cardColor = 'white';
         this.complexity = 2;
 
-        // 滑鼠控制变數
+        // 滑鼠控制變數
         this.isDragging = false;
         this.previousMousePosition = { x: 0, y: 0 };
         this.modelRotation = { x: 0, y: 0 };
         this.cameraDistance = 30;
+
+        // 卡片開闔動畫變數
+        this.cardOpenAngle = 0; // 0 = 關閉, Math.PI = 完全打開
+        this.isCardOpening = false;
+        this.targetCardAngle = 0;
+        this.animationProgress = 0;
+
+        // 紙張動畫變數
+        this.paperSheetGroup = null;
+        this.paperAnimationTime = 0;
+        this.showPaperAnimation = false;
 
         this.mechanismNames = {
             'vfold': 'V型摺',
@@ -40,17 +51,17 @@ class PopupCardDesigner {
         };
 
         this.structureHints = {
-            'vfold': '💡 V型摺：最基礎，適合人物、樹木、简單建築',
-            'parallel': '💡 平行摺：創造層次感，適合建築美景',
-            'floating': '💡 懸浮層：最高级，較載最複雜，適合結成陣效',
-            'pulltab': '💡 拉動機關：加入互動性，適合勘探推痕',
-            'spinner': '💡 旋轉機關：需要精確設計釣點，效果最佳'
+            'vfold': '🔆 V型摺：最基礎，適合人物、樹木、簡單建築',
+            'parallel': '🔆 平行摺：創造層次感，適合建築美景',
+            'floating': '🔆 懸浮層：最高級，較載最複雜，適合結成陣效',
+            'pulltab': '🔆 拉動機關：加入互動性，適合摘探推痕',
+            'spinner': '🔆 旋轉機關：需要精確設計鉸點，效果最佳'
         };
 
         this.initThreeJS();
         this.setupEventListeners();
         this.setupMouseControls();
-        this.createInitialModel();
+        this.createCardWithPaperAnimation();
         this.animate();
     }
 
@@ -136,7 +147,7 @@ class PopupCardDesigner {
             this.isDragging = false;
         });
 
-        // 溻輪縮放
+        // 滾輪縮放
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
 
@@ -237,6 +248,29 @@ class PopupCardDesigner {
             document.getElementById('playAnimation').textContent = this.isAnimating ? '⏸ 停止' : '▶ 動畫';
         });
 
+        // Open/Close card button
+        const openCloseBtn = document.getElementById('openCloseCard');
+        if (openCloseBtn) {
+            openCloseBtn.addEventListener('click', () => {
+                this.toggleCardAnimation();
+            });
+        }
+
+        // Paper animation button
+        const paperAnimBtn = document.getElementById('showPaperAnimation');
+        if (paperAnimBtn) {
+            paperAnimBtn.addEventListener('click', () => {
+                this.showPaperAnimation = !this.showPaperAnimation;
+                if (this.showPaperAnimation) {
+                    this.createCardWithPaperAnimation();
+                    paperAnimBtn.textContent = '🎬 停止紙張演示';
+                } else {
+                    this.createInitialModel();
+                    paperAnimBtn.textContent = '📄 紙張展開演示';
+                }
+            });
+        }
+
         document.getElementById('resetView').addEventListener('click', () => {
             document.getElementById('rotateX').value = 0;
             document.getElementById('rotateY').value = 0;
@@ -245,6 +279,7 @@ class PopupCardDesigner {
             this.cameraDistance = 30;
             this.camera.position.z = 30;
             this.cardModel.rotation.set(0, 0, 0);
+            this.cardOpenAngle = 0;
         });
 
         document.getElementById('toggleWireframe').addEventListener('click', () => {
@@ -287,6 +322,47 @@ class PopupCardDesigner {
         });
     }
 
+    createCardWithPaperAnimation() {
+        // Remove old model
+        if (this.cardModel) {
+            this.scene.remove(this.cardModel);
+        }
+
+        // Create main card model
+        this.cardModel = new THREE.Group();
+        this.scene.add(this.cardModel);
+
+        // Create paper sheets for animation
+        this.paperSheetGroup = new THREE.Group();
+        this.createPaperSheets();
+        this.cardModel.add(this.paperSheetGroup);
+
+        // Create the actual popup mechanism
+        this.createInitialModel();
+    }
+
+    createPaperSheets() {
+        const width = this.cardWidth / 2;
+        const height = this.cardHeight / 2;
+
+        // Create multiple paper layers to show unfolding
+        const colors = [0xffffff, 0xffe8b6, 0xffd4d4, 0xd4f1ff];
+        
+        for (let i = 0; i < 4; i++) {
+            const sheetGeom = new THREE.BoxGeometry(width * 1.2, height * 1.2, 0.05);
+            const sheetMaterial = new THREE.MeshStandardMaterial({
+                color: colors[i % colors.length],
+                metalness: 0.05,
+                roughness: 0.8,
+                side: THREE.DoubleSide
+            });
+            const sheet = new THREE.Mesh(sheetGeom, sheetMaterial);
+            sheet.userData.index = i;
+            sheet.position.z = -0.5 - i * 0.3;
+            this.paperSheetGroup.add(sheet);
+        }
+    }
+
     createInitialModel() {
         // Remove old model
         if (this.cardModel) {
@@ -325,15 +401,16 @@ class PopupCardDesigner {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // Base card (left panel)
+        // 左側卡片（可開闔）
         const leftCardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const material = this.getCardMaterial();
         const leftCard = new THREE.Mesh(leftCardGeom, material);
         leftCard.position.set(-width / 2, 0, 0);
         leftCard.castShadow = true;
         this.cardModel.add(leftCard);
+        this.leftCard = leftCard;
 
-        // Base card (right panel)
+        // 右側卡片（固定）
         const rightCard = new THREE.Mesh(leftCardGeom, material);
         rightCard.position.set(width / 2, 0, 0);
         rightCard.castShadow = true;
@@ -376,6 +453,7 @@ class PopupCardDesigner {
         leftCard.position.set(-width / 2, 0, 0);
         leftCard.castShadow = true;
         this.cardModel.add(leftCard);
+        this.leftCard = leftCard;
 
         const rightCard = new THREE.Mesh(leftCardGeom, material);
         rightCard.position.set(width / 2, 0, 0);
@@ -408,6 +486,7 @@ class PopupCardDesigner {
         leftCard.position.set(-width / 2, 0, 0);
         leftCard.castShadow = true;
         this.cardModel.add(leftCard);
+        this.leftCard = leftCard;
 
         const rightCard = new THREE.Mesh(cardGeom, baseMaterial);
         rightCard.position.set(width / 2, 0, 0);
@@ -455,6 +534,7 @@ class PopupCardDesigner {
         leftCard.position.set(-width / 2, 0, 0);
         leftCard.castShadow = true;
         this.cardModel.add(leftCard);
+        this.leftCard = leftCard;
 
         const rightCard = new THREE.Mesh(cardGeom, material);
         rightCard.position.set(width / 2, 0, 0);
@@ -489,6 +569,7 @@ class PopupCardDesigner {
         leftCard.position.set(-width / 2, 0, 0);
         leftCard.castShadow = true;
         this.cardModel.add(leftCard);
+        this.leftCard = leftCard;
 
         const rightCard = new THREE.Mesh(cardGeom, material);
         rightCard.position.set(width / 2, 0, 0);
@@ -518,6 +599,17 @@ class PopupCardDesigner {
 
         this.spinnerGroup = spinnerGroup;
         this.cardModel.add(spinnerGroup);
+    }
+
+    toggleCardAnimation() {
+        if (this.cardOpenAngle >= Math.PI * 0.99) {
+            // Currently open, close it
+            this.targetCardAngle = 0;
+        } else {
+            // Currently closed, open it
+            this.targetCardAngle = Math.PI;
+        }
+        this.isCardOpening = true;
     }
 
     getCardMaterial() {
@@ -573,7 +665,7 @@ class PopupCardDesigner {
             'parallel': '建議使用最硬的300-350 GSM作為基底，因為多層堆疊會增加壓力。元件層建議200 GSM，確保層與層之間的清晰分離。',
             'floating': '這種結構需要精確的支撐條設計。基底採用300 GSM，側支撐條用220 GSM。懸浮層建議使用180-200 GSM，保持輕盈感。',
             'pulltab': '基底需要300 GSM提供穩定支撐。移動元件採用220 GSM。軌道設計必須精確，避免機關被拉脫或卡住。',
-            'spinner': '基底300 GSM提供重量中心穩定性。旋轉元件建議使用190-210 GSM，使其能順暢旋轉。樞紐點需要特殊加固。'
+            'spinner': '基底300 GSM提供重量中心穩定性。旋轉元件建議使用190-210 GSM，使其能順暢旋轉。鉸紐點需要特殊加固。'
         };
 
         document.getElementById('materialRec').textContent = recommendations[this.mechanism] || '根據結構複雜度選擇適當紙張厚度。';
@@ -590,7 +682,40 @@ class PopupCardDesigner {
     animate() {
         this.animationId = requestAnimationFrame(() => this.animate());
 
-        // Auto-animation
+        // 紙張展開動畫
+        if (this.showPaperAnimation && this.paperSheetGroup) {
+            this.paperAnimationTime += 0.02;
+            if (this.paperAnimationTime > 6) {
+                this.paperAnimationTime = 0;
+            }
+
+            this.paperSheetGroup.children.forEach((sheet, i) => {
+                const delay = i * 0.3;
+                const animProgress = Math.max(0, Math.min(1, (this.paperAnimationTime - delay) / 1.5));
+                
+                // 紙張展開動畫
+                sheet.rotation.x = animProgress * Math.PI * 0.5;
+                sheet.position.z = -0.5 - i * 0.3 + animProgress * 3;
+                sheet.position.y = Math.sin(animProgress * Math.PI) * 2;
+            });
+        }
+
+        // 卡片開闔動畫
+        if (this.isCardOpening) {
+            const diff = this.targetCardAngle - this.cardOpenAngle;
+            if (Math.abs(diff) > 0.01) {
+                this.cardOpenAngle += diff * 0.1;
+                if (this.leftCard) {
+                    // 左側卡片以Y軸旋轉
+                    this.leftCard.rotation.y = -this.cardOpenAngle;
+                }
+            } else {
+                this.cardOpenAngle = this.targetCardAngle;
+                this.isCardOpening = false;
+            }
+        }
+
+        // Auto-animation for mechanisms
         if (this.isAnimating) {
             const time = Date.now() * 0.001;
 
@@ -654,7 +779,7 @@ class PopupCardDesigner {
     }
 
     exportToPDF() {
-        alert('PDF匯出功能需要在Illustrator或Inkscape中進行進一步編輯。\n\n建議步驟：\n1. 在此工具中設計您的卡片結構\n2. 將設計導出為JSON\n3. 在向量設計軟體中使用紅色線表示切割，藍色線表示摺痕\n4. 導出為PDF');
+        alert('PDF匯出功能需要在Illustrator或Inkscape中進行進一步編輯。\n\n建議步驟：\n1. 在此工具中設計您的卡片結構\n2. 將設計匯出為JSON\n3. 在向量設計軟體中使用紅色線表示切割，藍色線表示摺痕\n4. 匯出為PDF');
     }
 
     showSuccessMessage(message) {
@@ -684,5 +809,5 @@ class PopupCardDesigner {
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const app = new PopupCardDesigner();
-    console.log('Pop-up Card Designer initialized with mouse controls and extended features');
+    console.log('Pop-up Card Designer initialized with paper animation and opening/closing card');
 });
