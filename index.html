@@ -597,6 +597,16 @@
                     <div class="paper-spec" id="structureHint">💡 V型摺：最基礎，適合人物、樹木、簡單建築</div>
                 </div>
 
+                <!-- 紙張管理 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">📄</span> 紙張管理</h3>
+                    <div class="form-group" style="text-align: center; color: #666; font-size: 0.85em; margin-bottom: 12px;">
+                        紙張數：<strong id="paperCount">1</strong>层
+                    </div>
+                    <button class="btn-primary btn-small" id="addPaperLayer" style="width: 100%; flex: none; margin-bottom: 12px;">📄 新增紙張</button>
+                    <div class="paper-spec">點擊按錠新增紙張层次。預設為1层白色卡紙。</div>
+                </div>
+
                 <!-- 接合方式 -->
                 <div class="panel-section">
                     <h3><span class="section-icon">🔗</span> 接合方式</h3>
@@ -614,7 +624,7 @@
 
                 <!-- 紙張選擇 -->
                 <div class="panel-section">
-                    <h3><span class="section-icon">📄</span> 紙張選擇</h3>
+                    <h3><span class="section-icon">📄</span> 紙張見賜</h3>
                     <div class="form-group">
                         <label for="baseCardType">基底卡片</label>
                         <select id="baseCardType">
@@ -669,7 +679,7 @@
 
             <!-- 中央：3D預覽畫布 -->
             <div class="center-panel">
-                <div class="hint-badge">👆 拖曳鼠標可旋轉檢視 | 滾輪縮放</div>
+                <div class="hint-badge">👆 拖曳鼠標進行有由掛團 | 滾輪縮放</div>
                 <canvas id="canvas"></canvas>
                 <div class="canvas-controls">
                     <div class="control-group">
@@ -686,7 +696,6 @@
                     </div>
                     <div class="animation-controls">
                         <button class="btn-secondary btn-small" id="openCloseCard">📖 開闔</button>
-                        <button class="btn-secondary btn-small" id="showPaperAnimation">📄 紙張展開</button>
                         <button class="btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
                         <button class="btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
                         <button class="btn-secondary btn-small" id="toggleWireframe">⬜ 線框</button>
@@ -716,7 +725,7 @@
                     </div>
 
                     <div class="info-card">
-                        <h4>📐 卡片規格</h4>
+                        <h4>📐 卡片見賜</h4>
                         <div class="info-item">
                             <span>尺寸</span>
                             <span class="info-value"><span id="infoWidth">15</span> × <span id="infoHeight">20</span> cm</span>
@@ -758,24 +767,24 @@
                 <!-- 教學標籤 -->
                 <div id="tutorial" class="tab-content">
                     <div class="tutorial-step">
-                        <h5><span class="step-number">1</span>製作白模</h5>
-                        <p>在繪製任何圖案之前，先用普通白紙製作粗糙模型，測試結構是否能順利開合、立體感是否足夠。</p>
+                        <h5><span class="step-number">1</span>拖動翻鼠控制</h5>
+                        <p>點擊并拖動画布上的卡片，翻鼠會直接控制滑动卵的開闔旋轉。上下拖動可以旋轉整個模型。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">2</span>隱藏支撐</h5>
-                        <p>設計師利用前景圖案遮擋背後的V型支撐條，讓物件看起來懸浮或自然站立。底座融合成地面圖案。</p>
+                        <h5><span class="step-number">2</span>新增紙張层次</h5>
+                        <p>點擊左侧【新增紙張】按錠來新增紙張层次。每次添加的紙張會以動畫效果从explode進入模型。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">3</span>紙張選擇</h5>
-                        <p>基底250-300 GSM確保硬度。元件180-220 GSM保持靈活。摺線應與紙張絲流平行，確保順暢摺起。</p>
+                        <h5><span class="step-number">3</span>選擇程子</h5>
+                        <p>適適選擇卡版右上方的【根心結構】、【紙張見賜】等，看詳後的推薦附載。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">4</span>精確摺線</h5>
-                        <p>使用壓線筆壓出清晰銳利的摺痕。這是決定卡片質感的關鍵因素。避免紙張破裂。</p>
+                        <h5><span class="step-number">4</span>系界旋轉諢暨光準</h5>
+                        <p>使用滑桿控制模例的旋轉、縮放。可选一級演示動画效果》、〈線框〉水不都鷸事。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">5</span>黏貼組合</h5>
-                        <p>標記好黏貼位置。使用細頭白膠筆或雙面膠，確保準確對齊。乾燥後檢查開合順暢度。</p>
+                        <h5><span class="step-number">5</span>導出並製作</h5>
+                        <p>到了右侧【導出】間層選擇、剗出設計數據或可作為一個參考深度。敲打開闔的卡片並按紙子推薦來製作。</p>
                     </div>
                 </div>
 
