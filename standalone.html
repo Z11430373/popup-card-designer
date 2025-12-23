@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>立體卡片設計工具 - 完整版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        .sidebar {
+            width: 380px;
+            background: white;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .main-canvas {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        #canvas {
+            flex: 1;
+            width: 100%;
+        }
+        
+        .controls-bar {
+            background: white;
+            padding: 12px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .control input[type="range"] {
+            width: 150px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+        
+        .option.active {
+            border-color: #667eea;
+            background: #e8eaf6;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+        
+        .color-box {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.05);
+        }
+        
+        .color-box.active {
+            border-color: #333;
+            box-shadow: 0 0 0 1px white, 0 0 0 3px #667eea;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #e8eaf6;
+            color: #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #dde2f0;
+        }
+        
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            display: inline-block;
+            width: auto;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-top: 12px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.85em;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <h2 style="margin-bottom: 20px; color: #667eea;">🎨 立體卡片設計工具</h2>
+            
+            <!-- 基本信息 -->
+            <div class="section">
+                <h3>📋 基本信息</h3>
+                <div class="form-group">
+                    <label>項目名稱</label>
+                    <input type="text" id="projectName" placeholder="例：聖誕節卡片">
+                </div>
+                <div class="form-group">
+                    <label>卡片寬度 (cm)</label>
+                    <input type="number" id="cardWidth" min="5" max="30" value="15" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label>卡片高度 (cm)</label>
+                    <input type="number" id="cardHeight" min="5" max="30" value="20" step="0.5">
+                </div>
+            </div>
+            
+            <!-- 結構類型 -->
+            <div class="section">
+                <h3>🏗️ 核心結構</h3>
+                <div class="option-grid">
+                    <div class="option active" data-mechanism="vfold">V型摺</div>
+                    <div class="option" data-mechanism="parallel">平行摺</div>
+                    <div class="option" data-mechanism="floating">懸浮層</div>
+                    <div class="option" data-mechanism="pulltab">拉動機關</div>
+                    <div class="option" data-mechanism="spinner">旋轉機關</div>
+                </div>
+            </div>
+            
+            <!-- 紙張選擇 -->
+            <div class="section">
+                <h3>📄 紙張選擇</h3>
+                <div class="form-group">
+                    <label>基底卡片</label>
+                    <select id="baseCardType">
+                        <option value="250gsm">250 GSM</option>
+                        <option value="300gsm" selected>300 GSM (推薦)</option>
+                        <option value="350gsm">350 GSM (厚重)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>立體元件</label>
+                    <select id="elementCardType">
+                        <option value="180gsm">180 GSM (輕薄)</option>
+                        <option value="200gsm">200 GSM</option>
+                        <option value="220gsm" selected>220 GSM (推薦)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 顏色 -->
+            <div class="section">
+                <h3>🎨 卡片顏色</h3>
+                <div class="color-grid">
+                    <div class="color-box active" style="background: white;" data-color="white" title="白色"></div>
+                    <div class="color-box" style="background: #ffe8b6;" data-color="cream" title="米色"></div>
+                    <div class="color-box" style="background: #ffd4d4;" data-color="pink" title="粉紅"></div>
+                    <div class="color-box" style="background: #d4f1ff;" data-color="blue" title="天藍"></div>
+                    <div class="color-box" style="background: #e8d4ff;" data-color="purple" title="紫色"></div>
+                    <div class="color-box" style="background: #d4ffd4;" data-color="green" title="綠色"></div>
+                </div>
+            </div>
+            
+            <!-- 設計參數 -->
+            <div class="section">
+                <h3>⚙️ 設計參數</h3>
+                <div class="form-group">
+                    <label>複雜度: <span id="complexityValue">2</span>/5</label>
+                    <input type="range" id="complexity" min="1" max="5" value="2">
+                </div>
+            </div>
+            
+            <!-- 信息顯示 -->
+            <div class="info-box">
+                <div class="info-item">
+                    <span>表面積:</span>
+                    <span class="info-value" id="statArea">300</span>
+                </div>
+                <div class="info-item">
+                    <span>預計深度:</span>
+                    <span class="info-value" id="statDepth">8 cm</span>
+                </div>
+                <div class="info-item">
+                    <span>結構類型:</span>
+                    <span class="info-value" id="infoMechanism">V型摺</span>
+                </div>
+            </div>
+            
+            <!-- 操作按鈕 -->
+            <div class="button-row">
+                <button class="button btn-primary" id="createBtn">✨ 建立模型</button>
+                <button class="button btn-secondary" id="resetBtn">🔄 重置</button>
+            </div>
+            <button class="button btn-primary" id="exportBtn">💾 導出設計</button>
+        </div>
+        
+        <div class="main-canvas">
+            <canvas id="canvas"></canvas>
+            <div class="controls-bar">
+                <div class="control">
+                    <label>旋轉 X:</label>
+                    <input type="range" id="rotateX" min="0" max="360" value="0">
+                </div>
+                <div class="control">
+                    <label>旋轉 Y:</label>
+                    <input type="range" id="rotateY" min="0" max="360" value="0">
+                </div>
+                <div class="control">
+                    <label>縮放:</label>
+                    <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <button class="button btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
+                <button class="button btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
+                <button class="button btn-secondary btn-small" id="toggleWireframe">⬛ 線框</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class PopupCardDesigner {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0xf5f7fa);
+                this.scene.fog = new THREE.Fog(0xf5f7fa, 100, 200);
+                
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 0, 30);
+                
+                this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                
+                // 打光
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 15, 10);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+                
+                this.cardModel = null;
+                this.mechanism = 'vfold';
+                this.cardColor = 'white';
+                this.isAnimating = false;
+                
+                this.setupEventListeners();
+                this.createInitialModel();
+                this.animate();
+                
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+            
+            setupEventListeners() {
+                // 機制選擇
+                document.querySelectorAll('.option').forEach(opt => {
+                    opt.addEventListener('click', (e) => {
+                        document.querySelectorAll('.option').forEach(o => o.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.mechanism = e.target.dataset.mechanism;
+                        this.updateInfo();
+                        this.createInitialModel();
+                    });
+                });
+                
+                // 顏色選擇
+                document.querySelectorAll('.color-box').forEach(box => {
+                    box.addEventListener('click', (e) => {
+                        document.querySelectorAll('.color-box').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.cardColor = e.target.dataset.color;
+                        this.createInitialModel();
+                    });
+                });
+                
+                // 尺寸變更
+                document.getElementById('cardWidth').addEventListener('change', () => {
+                    this.updateInfo();
+                    this.createInitialModel();
+                });
+                document.getElementById('cardHeight').addEventListener('change', () => {
+                    this.updateInfo();
+                    this.createInitialModel();
+                });
+                
+                // 複雜度
+                document.getElementById('complexity').addEventListener('input', (e) => {
+                    document.getElementById('complexityValue').textContent = e.target.value;
+                });
+                
+                // 旋轉控制
+                document.getElementById('rotateX').addEventListener('input', (e) => {
+                    this.cardModel.rotation.x = e.target.value * Math.PI / 180;
+                });
+                document.getElementById('rotateY').addEventListener('input', (e) => {
+                    this.cardModel.rotation.y = e.target.value * Math.PI / 180;
+                });
+                document.getElementById('scale').addEventListener('input', (e) => {
+                    const s = parseFloat(e.target.value);
+                    this.cardModel.scale.set(s, s, s);
+                });
+                
+                // 按鈕
+                document.getElementById('createBtn').addEventListener('click', () => this.createInitialModel());
+                document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+                document.getElementById('playAnimation').addEventListener('click', (e) => {
+                    this.isAnimating = !this.isAnimating;
+                    e.target.textContent = this.isAnimating ? '⏸ 停止' : '▶ 動畫';
+                });
+                document.getElementById('resetView').addEventListener('click', () => {
+                    document.getElementById('rotateX').value = 0;
+                    document.getElementById('rotateY').value = 0;
+                    document.getElementById('scale').value = 1;
+                    this.cardModel.rotation.set(0, 0, 0);
+                    this.cardModel.scale.set(1, 1, 1);
+                });
+                document.getElementById('toggleWireframe').addEventListener('click', () => this.toggleWireframe());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
+            }
+            
+            createInitialModel() {
+                if (this.cardModel) this.scene.remove(this.cardModel);
+                this.cardModel = new THREE.Group();
+                this.scene.add(this.cardModel);
+                
+                const width = 7.5;
+                const height = 10;
+                
+                // 基底卡片
+                const cardGeom = new THREE.BoxGeometry(width, height, 0.1);
+                const material = this.getCardMaterial();
+                
+                const leftCard = new THREE.Mesh(cardGeom, material);
+                leftCard.position.set(-width / 2, 0, 0);
+                this.cardModel.add(leftCard);
+                
+                const rightCard = new THREE.Mesh(cardGeom, material);
+                rightCard.position.set(width / 2, 0, 0);
+                this.cardModel.add(rightCard);
+                
+                // 根據機制創建元素
+                switch(this.mechanism) {
+                    case 'vfold':
+                        this.createVFoldElement(width, height);
+                        break;
+                    case 'parallel':
+                        this.createParallelFoldElement(width, height);
+                        break;
+                    case 'floating':
+                        this.createFloatingElement(width, height);
+                        break;
+                    case 'pulltab':
+                        this.createPullTabElement(width, height);
+                        break;
+                    case 'spinner':
+                        this.createSpinnerElement(width, height);
+                        break;
+                }
+            }
+            
+            createVFoldElement(width, height) {
+                const geometry = new THREE.ConeGeometry(2, 4, 8);
+                const material = this.getElementMaterial();
+                const cone = new THREE.Mesh(geometry, material);
+                cone.position.set(0, 2, 1);
+                this.cardModel.add(cone);
+            }
+            
+            createParallelFoldElement(width, height) {
+                for (let i = 0; i < 3; i++) {
+                    const geom = new THREE.BoxGeometry(width * 0.7, height * 0.6, 0.08);
+                    const material = this.getElementMaterial();
+                    const box = new THREE.Mesh(geom, material);
+                    box.position.z = i * 1.2 + 1;
+                    this.cardModel.add(box);
+                }
+            }
+            
+            createFloatingElement(width, height) {
+                for (let i = 0; i < 4; i++) {
+                    const geom = new THREE.BoxGeometry(width * 0.6, height * 0.6, 0.08);
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: 0xffffff - (i * 0x333333),
+                        metalness: 0.3,
+                        roughness: 0.4
+                    });
+                    const layer = new THREE.Mesh(geom, mat);
+                    layer.position.z = i * 2 + 1;
+                    this.cardModel.add(layer);
+                }
+            }
+            
+            createPullTabElement(width, height) {
+                const geom = new THREE.BoxGeometry(width * 0.6, height * 0.5, 0.08);
+                const mat = this.getElementMaterial();
+                this.pullTabMesh = new THREE.Mesh(geom, mat);
+                this.pullTabMesh.position.z = 1;
+                this.cardModel.add(this.pullTabMesh);
+            }
+            
+            createSpinnerElement(width, height) {
+                const geom = new THREE.SphereGeometry(1.5, 16, 16);
+                const mat = this.getElementMaterial();
+                this.spinnerMesh = new THREE.Mesh(geom, mat);
+                this.spinnerMesh.position.z = 1.5;
+                this.cardModel.add(this.spinnerMesh);
+            }
+            
+            getCardMaterial() {
+                const colors = {
+                    'white': 0xffffff,
+                    'cream': 0xffe8b6,
+                    'pink': 0xffd4d4,
+                    'blue': 0xd4f1ff,
+                    'purple': 0xe8d4ff,
+                    'green': 0xd4ffd4
+                };
+                return new THREE.MeshStandardMaterial({
+                    color: colors[this.cardColor] || 0xffffff,
+                    metalness: 0.1,
+                    roughness: 0.7
+                });
+            }
+            
+            getElementMaterial() {
+                return new THREE.MeshStandardMaterial({
+                    color: 0xf5a962,
+                    metalness: 0.2,
+                    roughness: 0.6
+                });
+            }
+            
+            updateInfo() {
+                const width = parseFloat(document.getElementById('cardWidth').value);
+                const height = parseFloat(document.getElementById('cardHeight').value);
+                const area = width * height;
+                const depth = Math.max(5, 8 + parseInt(document.getElementById('complexity').value) * 2);
+                
+                document.getElementById('statArea').textContent = area.toFixed(0);
+                document.getElementById('statDepth').textContent = depth.toFixed(1) + ' cm';
+                
+                const mechanismNames = {
+                    'vfold': 'V型摺',
+                    'parallel': '平行摺',
+                    'floating': '懸浮層',
+                    'pulltab': '拉動機關',
+                    'spinner': '旋轉機關'
+                };
+                document.getElementById('infoMechanism').textContent = mechanismNames[this.mechanism];
+            }
+            
+            toggleWireframe() {
+                this.cardModel.traverse(child => {
+                    if (child instanceof THREE.Mesh) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+            
+            exportData() {
+                const data = {
+                    projectName: document.getElementById('projectName').value || '未命名',
+                    mechanism: this.mechanism,
+                    cardWidth: parseFloat(document.getElementById('cardWidth').value),
+                    cardHeight: parseFloat(document.getElementById('cardHeight').value),
+                    baseCardType: document.getElementById('baseCardType').value,
+                    elementCardType: document.getElementById('elementCardType').value,
+                    cardColor: this.cardColor,
+                    timestamp: new Date().toISOString()
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'popup-card-' + Date.now() + '.json';
+                a.click();
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                if (this.isAnimating) {
+                    const time = Date.now() * 0.001;
+                    if (this.pullTabMesh) {
+                        this.pullTabMesh.position.x = Math.sin(time) * 2;
+                    }
+                    if (this.spinnerMesh) {
+                        this.spinnerMesh.rotation.z += 0.02;
+                    }
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new PopupCardDesigner();
+        });
+    </script>
+</body>
+</html>
