@@ -49,6 +49,11 @@
             width: 100%;
             height: 100%;
             display: block;
+            cursor: grab;
+        }
+        
+        #canvas:active {
+            cursor: grabbing;
         }
         
         .controls-bar {
@@ -270,6 +275,26 @@
             color: #667eea;
             font-size: 1.3em;
         }
+        
+        .drag-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 50;
+        }
+        
+        .main-canvas:hover .drag-hint {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -287,7 +312,7 @@
                 </div>
                 <div class="form-group">
                     <label>卡片寬度 (cm)</label>
-                    <input type="number" id="cardWidth" min="5" max="30" value="15" step="0.5">
+                    <input type="number" id="cardWidth" min="5" max="30" value="16" step="0.5">
                 </div>
                 <div class="form-group">
                     <label>卡片高度 (cm)</label>
@@ -354,11 +379,11 @@
             <div class="info-box">
                 <div class="info-item">
                     <span>表面積:</span>
-                    <span class="info-value" id="statArea">300</span>
+                    <span class="info-value" id="statArea">320</span>
                 </div>
                 <div class="info-item">
                     <span>預計深度:</span>
-                    <span class="info-value" id="statDepth">8 cm</span>
+                    <span class="info-value" id="statDepth">12.0</span>
                 </div>
                 <div class="info-item">
                     <span>結構類型:</span>
@@ -376,6 +401,7 @@
         
         <!-- 主要畫布區 -->
         <div class="main-canvas">
+            <div class="drag-hint">🔃 拉動模組 ✓</div>
             <canvas id="canvas"></canvas>
             <div class="controls-bar">
                 <div class="control">
@@ -383,7 +409,7 @@
                     <input type="range" id="rotateX" min="0" max="360" value="0">
                 </div>
                 <div class="control">
-                    <label>旋轉 Y:</label>
+                    <label>Y:</label>
                     <input type="range" id="rotateY" min="0" max="360" value="0">
                 </div>
                 <div class="control">
@@ -433,11 +459,64 @@
                 this.pullTabMesh = null;
                 this.spinnerMesh = null;
                 
+                // 滑鼤控制的狀態
+                this.isDragging = false;
+                this.previousMousePosition = { x: 0, y: 0 };
+                this.modelRotation = { x: 0, y: 0 };
+                
                 this.setupEventListeners();
+                this.setupMouseControls();
                 this.createInitialModel();
                 this.animate();
                 
                 window.addEventListener('resize', () => this.onWindowResize());
+            }
+            
+            setupMouseControls() {
+                const canvas = document.getElementById('canvas');
+                
+                // 滑鼤按下
+                canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+                
+                // 滑鼤移動
+                document.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging) return;
+                    
+                    const deltaX = e.clientX - this.previousMousePosition.x;
+                    const deltaY = e.clientY - this.previousMousePosition.y;
+                    
+                    // 滑鼤水平玾動控制Y軸旋轉
+                    // 滑鼤垫直玾動控制X軸旋轉
+                    this.modelRotation.y += deltaX * 0.01;
+                    this.modelRotation.x += deltaY * 0.01;
+                    
+                    // 避免X軸旋轉過大
+                    this.modelRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.modelRotation.x));
+                    
+                    if (this.cardModel) {
+                        this.cardModel.rotation.x = this.modelRotation.x;
+                        this.cardModel.rotation.y = this.modelRotation.y;
+                    }
+                    
+                    // 更新滑下条的值（准確位置）
+                    document.getElementById('rotateX').value = (this.modelRotation.x * 180 / Math.PI) % 360;
+                    document.getElementById('rotateY').value = (this.modelRotation.y * 180 / Math.PI) % 360;
+                    
+                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+                
+                // 滑鼤放開
+                document.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                });
+                
+                // 防止滑鼤移出画布時中斷拓動
+                canvas.addEventListener('mouseleave', () => {
+                    this.isDragging = false;
+                });
             }
             
             setupEventListeners() {
@@ -478,12 +557,14 @@
                     this.updateInfo();
                 });
                 
-                // 旋轉控制
+                // 旋轉控制（不取消，因為滑鼤也會更新它）
                 document.getElementById('rotateX').addEventListener('input', (e) => {
-                    if (this.cardModel) this.cardModel.rotation.x = e.target.value * Math.PI / 180;
+                    this.modelRotation.x = e.target.value * Math.PI / 180;
+                    if (this.cardModel) this.cardModel.rotation.x = this.modelRotation.x;
                 });
                 document.getElementById('rotateY').addEventListener('input', (e) => {
-                    if (this.cardModel) this.cardModel.rotation.y = e.target.value * Math.PI / 180;
+                    this.modelRotation.y = e.target.value * Math.PI / 180;
+                    if (this.cardModel) this.cardModel.rotation.y = this.modelRotation.y;
                 });
                 document.getElementById('scale').addEventListener('input', (e) => {
                     if (this.cardModel) {
@@ -503,6 +584,7 @@
                     document.getElementById('rotateX').value = 0;
                     document.getElementById('rotateY').value = 0;
                     document.getElementById('scale').value = 1;
+                    this.modelRotation = { x: 0, y: 0 };
                     if (this.cardModel) {
                         this.cardModel.rotation.set(0, 0, 0);
                         this.cardModel.scale.set(1, 1, 1);
@@ -552,6 +634,10 @@
                         this.createSpinnerElement(width, height);
                         break;
                 }
+                
+                // 恢複是次有拓動時的旋轉狀態
+                this.cardModel.rotation.x = this.modelRotation.x;
+                this.cardModel.rotation.y = this.modelRotation.y;
             }
             
             createVFoldElement(width, height) {
