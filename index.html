@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>立體卡片設計工具 | Pop-up Card Designer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            height: calc(100vh - 200px);
+        }
+
+        /* 左側面板 */
+        .left-panel {
+            width: 350px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .panel-section {
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .panel-section h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e8eaf6;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #dde2f0;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 0.8em;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .option-item {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option-item:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .option-item.active {
+            border-color: #667eea;
+            background: #e8eaf6;
+            color: #667eea;
+        }
+
+        .option-item-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .option-item-text {
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        /* 中央3D視圖 */
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #canvas {
+            flex: 1;
+            width: 100%;
+            display: block;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .canvas-controls {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            padding: 12px 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            margin: 0;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        .control-group input[type="range"] {
+            width: 150px;
+        }
+
+        .animation-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .animation-controls button {
+            padding: 8px 15px;
+            font-size: 0.85em;
+        }
+
+        /* 右側面板 */
+        .right-panel {
+            width: 350px;
+            background: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.85em;
+            color: #666;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .material-recommendation {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 500;
+            font-size: 0.9em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tutorial-step {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .tutorial-step h5 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .tutorial-step p {
+            font-size: 0.8em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        input[type="range"] {
+            cursor: pointer;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-box-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .stat-box-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1400px) {
+            .left-panel, .right-panel {
+                width: 300px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .left-panel, .right-panel {
+                width: 100%;
+                max-height: 40vh;
+            }
+
+            #canvas {
+                min-height: 400px;
+            }
+        }
+
+        .export-section {
+            margin-top: 15px;
+        }
+
+        .export-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .warning-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #155724;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 立體卡片設計工具</h1>
+            <p>Pop-up Card Designer | 3D結構建模 × 設計工作流程 × 材料計算</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 左側面板：設計參數 -->
+            <div class="left-panel">
+                <!-- 基本信息 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">📋</span> 卡片基本信息</h3>
+                    <div class="form-group">
+                        <label for="projectName">項目名稱</label>
+                        <input type="text" id="projectName" placeholder="例：聖誕節立體卡片">
+                    </div>
+                    <div class="form-group">
+                        <label for="cardWidth">卡片寬度 (cm)</label>
+                        <input type="number" id="cardWidth" min="5" max="30" value="15" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="cardHeight">卡片高度 (cm)</label>
+                        <input type="number" id="cardHeight" min="5" max="30" value="20" step="0.5">
+                    </div>
+                </div>
+
+                <!-- 結構類型選擇 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">🏗️</span> 核心結構</h3>
+                    <div class="option-grid">
+                        <div class="option-item active" data-mechanism="vfold">
+                            <div class="option-item-icon">V</div>
+                            <div class="option-item-text">V型摺</div>
+                        </div>
+                        <div class="option-item" data-mechanism="parallel">
+                            <div class="option-item-icon">□</div>
+                            <div class="option-item-text">平行摺</div>
+                        </div>
+                        <div class="option-item" data-mechanism="floating">
+                            <div class="option-item-icon">⋯</div>
+                            <div class="option-item-text">懸浮層</div>
+                        </div>
+                        <div class="option-item" data-mechanism="pulltab">
+                            <div class="option-item-icon">→</div>
+                            <div class="option-item-text">拉動機關</div>
+                        </div>
+                        <div class="option-item" data-mechanism="spinner">
+                            <div class="option-item-icon">⟲</div>
+                            <div class="option-item-text">旋轉機關</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 材料選擇 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">📄</span> 紙張選擇</h3>
+                    <div class="form-group">
+                        <label for="baseCardType">基底卡片</label>
+                        <select id="baseCardType">
+                            <option value="250gsm">250 GSM (標準)</option>
+                            <option value="300gsm">300 GSM (推薦)</option>
+                            <option value="350gsm">350 GSM (厚重)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="elementCardType">立體元件</label>
+                        <select id="elementCardType">
+                            <option value="180gsm">180 GSM (輕薄)</option>
+                            <option value="200gsm">200 GSM (標準)</option>
+                            <option value="220gsm">220 GSM (推薦)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 顏色和風格 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">🎨</span> 風格設定</h3>
+                    <div class="form-group">
+                        <label>卡片顏色</label>
+                        <div class="color-picker">
+                            <div class="color-option active" style="background: white;" data-color="white" title="白色"></div>
+                            <div class="color-option" style="background: #ffe8b6;" data-color="cream" title="米色"></div>
+                            <div class="color-option" style="background: #ffd4d4;" data-color="pink" title="粉紅"></div>
+                            <div class="color-option" style="background: #d4f1ff;" data-color="blue" title="天藍"></div>
+                            <div class="color-option" style="background: #e8d4ff;" data-color="purple" title="紫色"></div>
+                            <div class="color-option" style="background: #d4ffd4;" data-color="green" title="綠色"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="complexity">複雜度</label>
+                        <input type="range" id="complexity" min="1" max="5" value="2">
+                        <small style="color: #666; display: block; margin-top: 4px;">
+                            <span id="complexityValue">2</span> / 5
+                        </small>
+                    </div>
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="button-group">
+                    <button class="btn-primary" id="createBtn">建立模型</button>
+                    <button class="btn-secondary" id="resetBtn">重置</button>
+                </div>
+            </div>
+
+            <!-- 中央：3D預覽畫布 -->
+            <div class="center-panel">
+                <canvas id="canvas"></canvas>
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <label>旋轉：X</label>
+                        <input type="range" id="rotateX" min="0" max="360" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label>Y</label>
+                        <input type="range" id="rotateY" min="0" max="360" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label>縮放</label>
+                        <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1">
+                    </div>
+                    <div class="animation-controls">
+                        <button class="btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
+                        <button class="btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
+                        <button class="btn-secondary btn-small" id="toggleWireframe">⬚ 線框</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側面板：資訊和教學 -->
+            <div class="right-panel">
+                <div class="tabs">
+                    <button class="tab active" data-tab="info">資訊</button>
+                    <button class="tab" data-tab="tutorial">教學</button>
+                    <button class="tab" data-tab="export">匯出</button>
+                </div>
+
+                <!-- 資訊標籤 -->
+                <div id="info" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="statArea">300</div>
+                            <div class="stat-box-label">表面積 (cm²)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="statDepth">8</div>
+                            <div class="stat-box-label">深度 (cm)</div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h4>📊 卡片規格</h4>
+                        <div class="info-item">
+                            <span>尺寸</span>
+                            <span class="info-value"><span id="infoWidth">15</span> × <span id="infoHeight">20</span> cm</span>
+                        </div>
+                        <div class="info-item">
+                            <span>基底紙張</span>
+                            <span class="info-value" id="infoBase">300 GSM</span>
+                        </div>
+                        <div class="info-item">
+                            <span>元件紙張</span>
+                            <span class="info-value" id="infoElement">220 GSM</span>
+                        </div>
+                        <div class="info-item">
+                            <span>結構類型</span>
+                            <span class="info-value" id="infoMechanism">V型摺</span>
+                        </div>
+                    </div>
+
+                    <div class="material-recommendation" id="materialRec">
+                        <strong>📌 材料建議：</strong><br>
+                        使用300 GSM的卡紙作為基底，確保足夠硬度支撐立體結構。元件應選擇220 GSM，保持靈活性同時避免軟塌。摺線應與紙張絲流平行。
+                    </div>
+
+                    <div class="info-card">
+                        <h4>🛠️ 所需工具</h4>
+                        <ul style="font-size: 0.8em; color: #666; list-position: inside;">
+                            <li>筆刀 &amp; 切割墊</li>
+                            <li>骨資料夾 / 壓線筆</li>
+                            <li>白膠 / 雙面膠</li>
+                            <li>金屬尺</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 教學標籤 -->
+                <div id="tutorial" class="tab-content">
+                    <div class="tutorial-step">
+                        <h5><span class="step-number">1</span>製作白模</h5>
+                        <p>在繪製任何圖案前，先用普通白紙製作粗糙模型，測試結構開合和立體感。</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h5><span class="step-number">2</span>隱藏支撐結構</h5>
+                        <p>用前景圖案遮擋V型支撐條，讓物件看起來懸浮或自然站立。融合底座成地面圖案。</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h5><span class="step-number">3</span>紙張選擇</h5>
+                        <p>基底250-300 GSM，元件180-220 GSM。摺痕應與紙張絲流平行，確保光滑摺疊。</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h5><span class="step-number">4</span>精確摺線</h5>
+                        <p>使用壓線筆壓出清晰銳利的摺痕。這是決定卡片質感的關鍵因素。</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h5><span class="step-number">5</span>黏貼和組合</h5>
+                        <p>標記好黏貼位置。使用細頭白膠或雙面膠，確保準確對齐。</p>
+                    </div>
+                </div>
+
+                <!-- 匯出標籤 -->
+                <div id="export" class="tab-content">
+                    <div class="export-section">
+                        <h4 style="margin-bottom: 15px; color: #667eea;">📥 匯出選項</h4>
+                        <button class="export-button" id="exportPDF">📄 匯出切割圖 (PDF)</button>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="export-button" id="exportImage" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);">🖼️ 匯出3D預覽 (PNG)</button>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="export-button" id="exportData" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">💾 匯出設計數據 (JSON)</button>
+                    </div>
+                    <div class="warning-box" style="margin-top: 15px;">
+                        ⚠️ PDF切割圖需要向量設計軟體進一步編輯。建議使用Adobe Illustrator或免費Inkscape。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
