@@ -25,31 +25,37 @@
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
+            display: flex;
+            height: 100vh;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            z-index: 50;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2em;
+            margin-bottom: 5px;
         }
 
         .header p {
-            font-size: 1.1em;
+            font-size: 0.9em;
             opacity: 0.9;
         }
 
         .main-content {
             display: flex;
-            height: calc(100vh - 200px);
+            height: 100vh;
+            margin-top: 80px;
         }
 
-        /* 左側面板 */
         .left-panel {
             width: 350px;
             background: #f8f9fa;
@@ -105,8 +111,7 @@
             transition: all 0.3s ease;
         }
 
-        input[type="text"]:focus,
-        input[type="number"]:focus,
+        input:focus,
         select:focus,
         textarea:focus {
             outline: none;
@@ -191,7 +196,6 @@
             font-weight: 600;
         }
 
-        /* 中央3D視圖 */
         .center-panel {
             flex: 1;
             display: flex;
@@ -204,6 +208,33 @@
             width: 100%;
             display: block;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .hint-badge {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            z-index: 40;
+            pointer-events: none;
+            animation: fadeInOut 4s ease;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .canvas-controls {
@@ -244,7 +275,6 @@
             font-size: 0.85em;
         }
 
-        /* 右側面板 */
         .right-panel {
             width: 350px;
             background: #f8f9fa;
@@ -417,27 +447,6 @@
             margin-top: 4px;
         }
 
-        @media (max-width: 1400px) {
-            .left-panel, .right-panel {
-                width: 300px;
-            }
-        }
-
-        @media (max-width: 1200px) {
-            .main-content {
-                flex-direction: column;
-            }
-
-            .left-panel, .right-panel {
-                width: 100%;
-                max-height: 40vh;
-            }
-
-            #canvas {
-                min-height: 400px;
-            }
-        }
-
         .export-section {
             margin-top: 15px;
         }
@@ -452,6 +461,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin-bottom: 8px;
         }
 
         .export-button:hover {
@@ -477,6 +487,57 @@
             font-size: 0.85em;
             color: #155724;
             margin-bottom: 15px;
+        }
+
+        .paper-spec {
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-top: 6px;
+            color: #555;
+        }
+
+        .left-panel::-webkit-scrollbar,
+        .right-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-panel::-webkit-scrollbar-track,
+        .right-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb,
+        .right-panel::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb:hover,
+        .right-panel::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        @media (max-width: 1400px) {
+            .left-panel, .right-panel {
+                width: 300px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .left-panel, .right-panel {
+                width: 100%;
+                max-height: 40vh;
+            }
+
+            #canvas {
+                min-height: 400px;
+            }
         }
     </style>
 </head>
@@ -507,7 +568,7 @@
                     </div>
                 </div>
 
-                <!-- 結構類型選擇 -->
+                <!-- 結構類型 -->
                 <div class="panel-section">
                     <h3><span class="section-icon">🏗️</span> 核心結構</h3>
                     <div class="option-grid">
@@ -516,7 +577,7 @@
                             <div class="option-item-text">V型摺</div>
                         </div>
                         <div class="option-item" data-mechanism="parallel">
-                            <div class="option-item-icon">□</div>
+                            <div class="option-item-icon">⬜</div>
                             <div class="option-item-text">平行摺</div>
                         </div>
                         <div class="option-item" data-mechanism="floating">
@@ -532,30 +593,50 @@
                             <div class="option-item-text">旋轉機關</div>
                         </div>
                     </div>
+                    <div class="paper-spec" id="structureHint">💡 V型摺：最基礎，適合人物、樹木、簡單建築</div>
                 </div>
 
-                <!-- 材料選擇 -->
+                <!-- 接合方式 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">🔗</span> 接合方式</h3>
+                    <div class="form-group">
+                        <label for="joinType">選擇接合方式</label>
+                        <select id="joinType">
+                            <option value="glue">白膠（推薦）</option>
+                            <option value="doubletape">雙面膠</option>
+                            <option value="slotjoin">插接式接合</option>
+                            <option value="foldpin">摺痕銷釘</option>
+                        </select>
+                    </div>
+                    <div class="paper-spec">白膠：黏性強，乾燥透明。雙面膠：快速乾淨。插接式：不需膠水。</div>
+                </div>
+
+                <!-- 紙張選擇 -->
                 <div class="panel-section">
                     <h3><span class="section-icon">📄</span> 紙張選擇</h3>
                     <div class="form-group">
                         <label for="baseCardType">基底卡片</label>
                         <select id="baseCardType">
                             <option value="250gsm">250 GSM (標準)</option>
-                            <option value="300gsm">300 GSM (推薦)</option>
+                            <option value="300gsm" selected>300 GSM (推薦)</option>
                             <option value="350gsm">350 GSM (厚重)</option>
+                            <option value="400gsm">400 GSM (特厚)</option>
                         </select>
+                        <div class="paper-spec">GSM = 克重/平方米。數字越大，紙張越硬。</div>
                     </div>
                     <div class="form-group">
                         <label for="elementCardType">立體元件</label>
                         <select id="elementCardType">
                             <option value="180gsm">180 GSM (輕薄)</option>
-                            <option value="200gsm">200 GSM (標準)</option>
-                            <option value="220gsm">220 GSM (推薦)</option>
+                            <option value="200gsm">200 GSM</option>
+                            <option value="220gsm" selected>220 GSM (推薦)</option>
+                            <option value="240gsm">240 GSM (厚)</option>
                         </select>
+                        <div class="paper-spec">建議比基底輕，保持靈活性。</div>
                     </div>
                 </div>
 
-                <!-- 顏色和風格 -->
+                <!-- 風格設定 -->
                 <div class="panel-section">
                     <h3><span class="section-icon">🎨</span> 風格設定</h3>
                     <div class="form-group">
@@ -580,22 +661,23 @@
 
                 <!-- 快速操作 -->
                 <div class="button-group">
-                    <button class="btn-primary" id="createBtn">建立模型</button>
-                    <button class="btn-secondary" id="resetBtn">重置</button>
+                    <button class="btn-primary" id="createBtn">✨ 建立模型</button>
+                    <button class="btn-secondary" id="resetBtn">🔄 重置</button>
                 </div>
             </div>
 
             <!-- 中央：3D預覽畫布 -->
             <div class="center-panel">
+                <div class="hint-badge">👆 拖曳鼠標可旋轉檢視 | 滾輪縮放</div>
                 <canvas id="canvas"></canvas>
                 <div class="canvas-controls">
                     <div class="control-group">
                         <label>旋轉：X</label>
-                        <input type="range" id="rotateX" min="0" max="360" value="0">
+                        <input type="range" id="rotateX" min="-180" max="180" value="0">
                     </div>
                     <div class="control-group">
                         <label>Y</label>
-                        <input type="range" id="rotateY" min="0" max="360" value="0">
+                        <input type="range" id="rotateY" min="-180" max="180" value="0">
                     </div>
                     <div class="control-group">
                         <label>縮放</label>
@@ -604,7 +686,7 @@
                     <div class="animation-controls">
                         <button class="btn-secondary btn-small" id="playAnimation">▶ 動畫</button>
                         <button class="btn-secondary btn-small" id="resetView">🔄 重置視圖</button>
-                        <button class="btn-secondary btn-small" id="toggleWireframe">⬚ 線框</button>
+                        <button class="btn-secondary btn-small" id="toggleWireframe">⬜ 線框</button>
                     </div>
                 </div>
             </div>
@@ -612,9 +694,9 @@
             <!-- 右側面板：資訊和教學 -->
             <div class="right-panel">
                 <div class="tabs">
-                    <button class="tab active" data-tab="info">資訊</button>
-                    <button class="tab" data-tab="tutorial">教學</button>
-                    <button class="tab" data-tab="export">匯出</button>
+                    <button class="tab active" data-tab="info">📊 資訊</button>
+                    <button class="tab" data-tab="tutorial">📚 教學</button>
+                    <button class="tab" data-tab="export">💾 導出</button>
                 </div>
 
                 <!-- 資訊標籤 -->
@@ -631,7 +713,7 @@
                     </div>
 
                     <div class="info-card">
-                        <h4>📊 卡片規格</h4>
+                        <h4>📐 卡片規格</h4>
                         <div class="info-item">
                             <span>尺寸</span>
                             <span class="info-value"><span id="infoWidth">15</span> × <span id="infoHeight">20</span> cm</span>
@@ -648,20 +730,24 @@
                             <span>結構類型</span>
                             <span class="info-value" id="infoMechanism">V型摺</span>
                         </div>
+                        <div class="info-item">
+                            <span>接合方式</span>
+                            <span class="info-value" id="infoJoin">白膠</span>
+                        </div>
                     </div>
 
                     <div class="material-recommendation" id="materialRec">
-                        <strong>📌 材料建議：</strong><br>
+                        <strong>🎯 材料建議：</strong><br>
                         使用300 GSM的卡紙作為基底，確保足夠硬度支撐立體結構。元件應選擇220 GSM，保持靈活性同時避免軟塌。摺線應與紙張絲流平行。
                     </div>
 
                     <div class="info-card">
                         <h4>🛠️ 所需工具</h4>
                         <ul style="font-size: 0.8em; color: #666; list-position: inside;">
-                            <li>筆刀 &amp; 切割墊</li>
-                            <li>骨資料夾 / 壓線筆</li>
-                            <li>白膠 / 雙面膠</li>
-                            <li>金屬尺</li>
+                            <li>✂️ 筆刀 & 切割墊</li>
+                            <li>📏 金屬尺</li>
+                            <li>📝 壓線筆/骨資料筆</li>
+                            <li>🧴 白膠/雙面膠</li>
                         </ul>
                     </div>
                 </div>
@@ -670,37 +756,37 @@
                 <div id="tutorial" class="tab-content">
                     <div class="tutorial-step">
                         <h5><span class="step-number">1</span>製作白模</h5>
-                        <p>在繪製任何圖案前，先用普通白紙製作粗糙模型，測試結構開合和立體感。</p>
+                        <p>在繪製任何圖案之前，先用普通白紙製作粗糙模型，測試結構是否能順利開合、立體感是否足夠。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">2</span>隱藏支撐結構</h5>
-                        <p>用前景圖案遮擋V型支撐條，讓物件看起來懸浮或自然站立。融合底座成地面圖案。</p>
+                        <h5><span class="step-number">2</span>隱藏支撐</h5>
+                        <p>設計師利用前景圖案遮擋背後的V型支撐條，讓物件看起來懸浮或自然站立。底座融合成地面圖案。</p>
                     </div>
                     <div class="tutorial-step">
                         <h5><span class="step-number">3</span>紙張選擇</h5>
-                        <p>基底250-300 GSM，元件180-220 GSM。摺痕應與紙張絲流平行，確保光滑摺疊。</p>
+                        <p>基底250-300 GSM確保硬度。元件180-220 GSM保持靈活。摺線應與紙張絲流平行，確保順暢摺起。</p>
                     </div>
                     <div class="tutorial-step">
                         <h5><span class="step-number">4</span>精確摺線</h5>
-                        <p>使用壓線筆壓出清晰銳利的摺痕。這是決定卡片質感的關鍵因素。</p>
+                        <p>使用壓線筆壓出清晰銳利的摺痕。這是決定卡片質感的關鍵因素。避免紙張破裂。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">5</span>黏貼和組合</h5>
-                        <p>標記好黏貼位置。使用細頭白膠或雙面膠，確保準確對齐。</p>
+                        <h5><span class="step-number">5</span>黏貼組合</h5>
+                        <p>標記好黏貼位置。使用細頭白膠筆或雙面膠，確保準確對齊。乾燥後檢查開合順暢度。</p>
                     </div>
                 </div>
 
-                <!-- 匯出標籤 -->
+                <!-- 導出標籤 -->
                 <div id="export" class="tab-content">
                     <div class="export-section">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">📥 匯出選項</h4>
-                        <button class="export-button" id="exportPDF">📄 匯出切割圖 (PDF)</button>
+                        <h4 style="margin-bottom: 15px; color: #667eea;">📦 導出選項</h4>
+                        <button class="export-button" id="exportPDF">📄 導出切割圖 (PDF)</button>
                     </div>
                     <div style="margin-top: 15px;">
-                        <button class="export-button" id="exportImage" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);">🖼️ 匯出3D預覽 (PNG)</button>
+                        <button class="export-button" id="exportImage" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);">🖼️ 導出3D預覽 (PNG)</button>
                     </div>
                     <div style="margin-top: 15px;">
-                        <button class="export-button" id="exportData" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">💾 匯出設計數據 (JSON)</button>
+                        <button class="export-button" id="exportData" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">💾 導出設計數據 (JSON)</button>
                     </div>
                     <div class="warning-box" style="margin-top: 15px;">
                         ⚠️ PDF切割圖需要向量設計軟體進一步編輯。建議使用Adobe Illustrator或免費Inkscape。
