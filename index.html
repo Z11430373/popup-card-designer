@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pop-up Card Designer | Professional CAD Tool</title>
+    <title>Pop-up Card Designer | 3D立體卡片設計工具</title>
     <style>
         * {
             margin: 0;
@@ -151,12 +151,6 @@
             border-color: #00bfff;
         }
 
-        .toolbar-btn.primary {
-            background: #00bfff;
-            color: #000;
-            border-color: #00bfff;
-        }
-
         /* === MAIN WORKSPACE === */
         .workspace {
             flex: 1;
@@ -168,7 +162,7 @@
         .canvas-area {
             flex: 1;
             position: relative;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -177,41 +171,27 @@
 
         #canvas {
             display: block;
-            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
-            cursor: grab;
-            border: 1px solid #3d3d3d;
+            width: 100%;
+            height: 100%;
         }
 
-        #canvas:active {
-            cursor: grabbing;
-        }
-
-        /* === RULERS === */
-        .ruler-h {
-            height: 20px;
-            background: #252525;
-            border-bottom: 1px solid #3d3d3d;
+        /* === STATUS BAR === */
+        .status-bar {
+            height: 25px;
+            background: #1a1a1a;
+            border-top: 1px solid #3d3d3d;
             display: flex;
             align-items: center;
-            overflow: hidden;
-            position: relative;
+            padding: 0 15px;
+            font-size: 11px;
+            color: #808080;
+            gap: 20px;
         }
 
-        .ruler-v {
-            width: 20px;
-            background: #252525;
-            border-right: 1px solid #3d3d3d;
+        .status-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .ruler-mark {
-            color: #666;
-            font-size: 8px;
-            text-align: center;
+            gap: 8px;
         }
 
         /* === RIGHT PANEL === */
@@ -289,6 +269,7 @@
             border-radius: 2px;
             font-size: 11px;
             font-family: inherit;
+            width: 100%;
         }
 
         input[type="checkbox"] {
@@ -341,29 +322,48 @@
 
         .tab-content {
             display: none;
+            flex: 1;
+            overflow-y: auto;
         }
 
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* === STATUS BAR === */
-        .status-bar {
-            height: 25px;
-            background: #1a1a1a;
-            border-top: 1px solid #3d3d3d;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 11px;
-            color: #808080;
-            gap: 20px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
+        /* === ELEMENT BUTTONS === */
+        .element-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .element-btn {
+            background: #3d3d3d;
+            border: 1px solid #4d4d4d;
+            color: #a0a0a0;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .element-icon {
+            font-size: 24px;
+        }
+
+        .element-btn:hover {
+            background: #404040;
+            color: #ffffff;
+            border-color: #00bfff;
+            box-shadow: 0 0 8px rgba(0, 191, 255, 0.3);
         }
 
         /* === LAYER TREE === */
@@ -386,12 +386,6 @@
             border-color: #00bfff;
         }
 
-        .layer-item.active {
-            background: #00bfff;
-            color: #000;
-            border-color: #00bfff;
-        }
-
         .layer-color {
             width: 16px;
             height: 16px;
@@ -402,6 +396,7 @@
 
         .layer-name {
             flex: 1;
+            font-size: 11px;
         }
 
         .layer-controls {
@@ -425,15 +420,15 @@
         }
 
         .layer-btn:hover {
-            background: #00bfff;
-            color: #000;
-            border-color: #00bfff;
+            background: #ff4444;
+            color: #fff;
+            border-color: #ff4444;
         }
 
         /* === SCROLLBAR === */
         ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
         }
 
         ::-webkit-scrollbar-track {
@@ -442,103 +437,39 @@
 
         ::-webkit-scrollbar-thumb {
             background: #404040;
-            border-radius: 6px;
+            border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: #505050;
         }
 
-        /* === TOOLTIP === */
-        .tooltip {
-            position: absolute;
-            background: #1a1a1a;
-            color: #e0e0e0;
-            padding: 6px 10px;
-            border: 1px solid #3d3d3d;
-            border-radius: 3px;
-            font-size: 11px;
-            white-space: nowrap;
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .tool-btn:hover .tooltip {
-            opacity: 1;
-        }
-
-        /* === SUCCESS MESSAGE === */
-        .success-box {
-            background: #1a3a1a;
-            border-left: 3px solid #28a745;
-            color: #90ee90;
-            padding: 10px 15px;
-            border-radius: 3px;
-            font-size: 12px;
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
+        /* === RESPONSIVE === */
+        @media (max-width: 1400px) {
+            .right-panel {
+                width: 280px;
             }
         }
 
-        /* === HINT BADGE === */
-        .hint-badge {
-            position: absolute;
-            top: 20px;
-            right: 350px;
-            background: rgba(0, 191, 255, 0.1);
-            border: 1px solid #00bfff;
-            color: #00bfff;
-            padding: 8px 15px;
-            border-radius: 3px;
-            font-size: 12px;
-            z-index: 40;
-            pointer-events: none;
-            animation: fadeInOut 4s ease;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            10%, 90% { opacity: 1; }
-        }
-
-        /* === DIMENSION DISPLAY === */
-        .dimension-display {
-            position: absolute;
-            background: rgba(0, 191, 255, 0.1);
-            border: 1px solid #00bfff;
-            padding: 4px 8px;
-            border-radius: 2px;
-            color: #00bfff;
-            font-size: 10px;
-            font-family: monospace;
-            pointer-events: none;
+        @media (max-width: 1200px) {
+            .left-toolbar {
+                display: none;
+            }
+            .right-panel {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <!-- MENU BAR -->
     <div class="menu-bar">
-        <div class="logo">🎨 POP-UP CARD CAD</div>
+        <div class="logo">🎨 3D Pop-up Card</div>
         <div class="menu-item">File</div>
         <div class="menu-item">Edit</div>
         <div class="menu-item">View</div>
-        <div class="menu-item">Insert</div>
-        <div class="menu-item">Format</div>
-        <div class="menu-item">Tools</div>
-        <div style="margin-left: auto; display: flex; gap: 10px;">
-            <div class="menu-item">Help</div>
+        <div class="menu-item">Help</div>
+        <div style="margin-left: auto;">
             <div class="menu-item">Settings</div>
         </div>
     </div>
@@ -547,40 +478,19 @@
     <div class="main-container">
         <!-- LEFT TOOLBAR -->
         <div class="left-toolbar">
-            <div class="tool-btn active" title="Select Tool">
-                ▲
-                <div class="tooltip">Select (S)</div>
-            </div>
-            <div class="tool-btn" title="Rotate">
-                ⟲
-                <div class="tooltip">Rotate (R)</div>
-            </div>
-            <div class="tool-btn" title="Scale">
-                ⟡
-                <div class="tooltip">Scale (Sc)</div>
-            </div>
+            <div class="tool-btn active" title="Select Tool">✋</div>
+            <div class="tool-btn" title="Rotate">🔄</div>
+            <div class="tool-btn" title="Scale">↔️</div>
             <div class="tool-separator"></div>
-            <div class="tool-btn" title="Add Paper">
-                ✚
-                <div class="tooltip">Add Layer</div>
-            </div>
-            <div class="tool-btn" title="Delete">
-                🗑
-                <div class="tooltip">Delete</div>
-            </div>
+            <div class="tool-btn" title="Preview">👀</div>
+            <div class="tool-btn" title="Animation">▶</div>
             <div class="tool-separator"></div>
-            <div class="tool-btn" title="Flip Card">
-                ⟷
-                <div class="tooltip">Flip</div>
-            </div>
-            <div class="tool-btn" title="Play Animation">
-                ▶
-                <div class="tooltip">Play</div>
-            </div>
+            <div class="tool-btn" title="Flip Card">💒</div>
         </div>
 
-        <!-- TOP TOOLBAR -->
+        <!-- MAIN WORKSPACE -->
         <div style="flex: 1; display: flex; flex-direction: column;">
+            <!-- TOP TOOLBAR -->
             <div class="top-toolbar">
                 <div class="toolbar-group">
                     <button class="toolbar-btn">📁 New</button>
@@ -588,53 +498,28 @@
                     <button class="toolbar-btn">📤 Export</button>
                 </div>
                 <div class="toolbar-group">
-                    <button class="toolbar-btn">↶ Undo</button>
-                    <button class="toolbar-btn">↷ Redo</button>
-                </div>
-                <div class="toolbar-group">
                     <label style="display: flex; align-items: center; gap: 5px; color: #a0a0a0; font-size: 11px;">
                         <input type="checkbox" id="soundToggle" checked>
                         🔊 Sound
                     </label>
                 </div>
-                <div class="toolbar-group">
-                    <input type="number" id="cardWidth" min="5" max="30" value="15" style="width: 60px;" placeholder="Width">
-                    <span style="color: #808080;">×</span>
-                    <input type="number" id="cardHeight" min="5" max="30" value="20" style="width: 60px;" placeholder="Height">
-                    <span style="color: #808080; font-size: 11px;">cm</span>
-                </div>
-                <div class="toolbar-group">
-                    <label style="color: #a0a0a0; font-size: 11px;">Scale:</label>
-                    <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1" style="width: 120px;">
-                    <span id="scaleValue" style="color: #a0a0a0; font-size: 11px; min-width: 35px;">100%</span>
+                <div style="margin-left: auto; display: flex; gap: 10px;">
+                    <label style="color: #a0a0a0; font-size: 11px;">Zoom:</label>
+                    <input type="range" id="scale" min="0.5" max="2" value="1" step="0.1" style="width: 100px; cursor: pointer;">
+                    <span id="scaleValue" style="color: #a0a0a0; font-size: 11px; min-width: 40px;">100%</span>
                 </div>
             </div>
 
-            <!-- WORKSPACE -->
+            <!-- CANVAS -->
             <div class="workspace">
-                <div style="display: flex; flex: 1;">
-                    <!-- VERTICAL RULER -->
-                    <div class="ruler-v" id="rulerV"></div>
-
-                    <!-- CANVAS AREA -->
-                    <div style="flex: 1; display: flex; flex-direction: column;">
-                        <!-- HORIZONTAL RULER -->
-                        <div class="ruler-h" id="rulerH"></div>
-
-                        <!-- MAIN CANVAS -->
-                        <div class="canvas-area">
-                            <div class="hint-badge">拖曳以翻開 | 滾輪縮放 | 按鍵快捷</div>
-                            <canvas id="canvas"></canvas>
-                            <div class="dimension-display" id="dimensionDisplay" style="display: none;">15.0 × 20.0 cm</div>
-                        </div>
-                    </div>
+                <div class="canvas-area">
+                    <canvas id="canvas"></canvas>
                 </div>
-
                 <!-- STATUS BAR -->
                 <div class="status-bar">
                     <div class="status-item">📍 Pos: <span id="posX">0.0</span>, <span id="posY">0.0</span></div>
-                    <div class="status-item">📏 Size: <span id="sizeW">15.0</span> × <span id="sizeH">20.0</span> cm</div>
-                    <div class="status-item">🎨 Layers: <span id="layerCount">1</span></div>
+                    <div class="status-item">📏 Card: <span id="sizeW">15.0</span> × <span id="sizeH">20.0</span> cm</div>
+                    <div class="status-item">🎨 Elements: <span id="elementCount">0</span></div>
                     <div class="status-item" style="margin-left: auto;">Ready</div>
                 </div>
             </div>
@@ -643,16 +528,16 @@
         <!-- RIGHT PANEL -->
         <div class="right-panel">
             <div class="panel-tabs">
-                <div class="panel-tab active" data-tab="properties">Properties</div>
-                <div class="panel-tab" data-tab="layers">Layers</div>
-                <div class="panel-tab" data-tab="settings">Settings</div>
+                <div class="panel-tab active" data-tab="design">Design</div>
+                <div class="panel-tab" data-tab="elements">Elements</div>
+                <div class="panel-tab" data-tab="properties">Props</div>
             </div>
 
-            <!-- PROPERTIES TAB -->
-            <div class="tab-content active" id="properties">
+            <!-- DESIGN TAB -->
+            <div id="design" class="tab-content active">
                 <div class="panel-content">
                     <div class="panel-section">
-                        <div class="panel-section-title">卡片尺寸</div>
+                        <div class="panel-section-title">📐 卡片尺寸</div>
                         <div class="property-item">
                             <div class="property-label">寬度 (cm)</div>
                             <input type="number" id="propWidth" value="15" min="5" max="30" step="0.5">
@@ -664,23 +549,10 @@
                     </div>
 
                     <div class="panel-section">
-                        <div class="panel-section-title">結構類型</div>
+                        <div class="panel-section-title">📄 紙張設定</div>
                         <div class="property-item">
-                            <select id="mechanism" style="width: 100%;">
-                                <option value="vfold">V 型摺</option>
-                                <option value="parallel">平行摺</option>
-                                <option value="floating">懸浮層</option>
-                                <option value="pulltab">拉動機關</option>
-                                <option value="spinner">旋轉機關</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="panel-section">
-                        <div class="panel-section-title">紙張規格</div>
-                        <div class="property-item">
-                            <div class="property-label">基底</div>
-                            <select id="baseCard" style="width: 100%;">
+                            <div class="property-label">基礎卡紙</div>
+                            <select>
                                 <option value="250">250 GSM</option>
                                 <option value="300" selected>300 GSM</option>
                                 <option value="350">350 GSM</option>
@@ -688,20 +560,8 @@
                             </select>
                         </div>
                         <div class="property-item">
-                            <div class="property-label">元件</div>
-                            <select id="elementCard" style="width: 100%;">
-                                <option value="180">180 GSM</option>
-                                <option value="200">200 GSM</option>
-                                <option value="220" selected>220 GSM</option>
-                                <option value="240">240 GSM</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="panel-section">
-                        <div class="panel-section-title">接合方式</div>
-                        <div class="property-item">
-                            <select id="joinType" style="width: 100%;">
+                            <div class="property-label">接合方式</div>
+                            <select>
                                 <option value="glue" selected>白膠 (推薦)</option>
                                 <option value="doubletape">雙面膠</option>
                                 <option value="slotjoin">插接式</option>
@@ -712,24 +572,47 @@
                 </div>
             </div>
 
-            <!-- LAYERS TAB -->
-            <div class="tab-content" id="layers">
+            <!-- ELEMENTS TAB -->
+            <div id="elements" class="tab-content">
                 <div class="panel-content">
                     <div class="panel-section">
-                        <div class="panel-section-title">圖層樹</div>
-                        <div id="layerPanel" style="max-height: 300px; overflow-y: auto;"></div>
-                        <button class="toolbar-btn" id="addLayerBtn" style="width: 100%; margin-top: 10px; justify-content: center;">
-                            ✚ 新增圖層
-                        </button>
+                        <div class="panel-section-title">➕ 新增元素</div>
+                        <div class="element-grid">
+                            <button class="element-btn" id="addHeartBtn">
+                                <div class="element-icon">❤️</div>
+                                <div>Heart</div>
+                            </button>
+                            <button class="element-btn" id="addStarBtn">
+                                <div class="element-icon">⭐</div>
+                                <div>Star</div>
+                            </button>
+                            <button class="element-btn" id="addBoxBtn">
+                                <div class="element-icon">📦</div>
+                                <div>Box</div>
+                            </button>
+                            <button class="element-btn" id="addSphereBtn">
+                                <div class="element-icon">🔵</div>
+                                <div>Sphere</div>
+                            </button>
+                            <button class="element-btn" id="addConeBtn">
+                                <div class="element-icon">🔺</div>
+                                <div>Cone</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-section-title">📋 元素列表</div>
+                        <div id="elementsList"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- SETTINGS TAB -->
-            <div class="tab-content" id="settings">
+            <!-- PROPERTIES TAB -->
+            <div id="properties" class="tab-content">
                 <div class="panel-content">
                     <div class="panel-section">
-                        <div class="panel-section-title">顯示設定</div>
+                        <div class="panel-section-title">⚙️ 顯示設定</div>
                         <div class="property-item">
                             <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
                                 <input type="checkbox" checked>
@@ -739,28 +622,32 @@
                         <div class="property-item">
                             <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
                                 <input type="checkbox" checked>
-                                顯示標尺
+                                顯示尺寸
                             </label>
                         </div>
                         <div class="property-item">
                             <label style="display: flex; align-items: center; gap: 8px; color: #a0a0a0; cursor: pointer;">
                                 <input type="checkbox" checked>
-                                顯示尺寸
+                                即時光影
                             </label>
                         </div>
                     </div>
 
                     <div class="panel-section">
-                        <div class="panel-section-title">導出</div>
-                        <button class="toolbar-btn" style="width: 100%; justify-content: center; margin-bottom: 8px;">
-                            💾 匯出 JSON
+                        <div class="panel-section-title">💾 導出選項</div>
+                        <button class="toolbar-btn" style="width: 100%; margin-bottom: 8px; justify-content: center;">
+                            📋 Export JSON
                         </button>
-                        <button class="toolbar-btn" style="width: 100%; justify-content: center; margin-bottom: 8px;">
-                            🖼 匯出 PNG
+                        <button class="toolbar-btn" style="width: 100%; margin-bottom: 8px; justify-content: center;">
+                            🖼️ Export PNG
                         </button>
                         <button class="toolbar-btn" style="width: 100%; justify-content: center;">
-                            📄 匯出 PDF
+                            📄 Export PDF
                         </button>
+                    </div>
+
+                    <div style="background: #1a3a1a; border-left: 3px solid #00aa00; color: #88ff88; padding: 10px; border-radius: 3px; font-size: 11px; margin-top: 15px;">
+                        ✅ 設計已自動儲存
                     </div>
                 </div>
             </div>
