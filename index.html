@@ -119,6 +119,12 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
         .button-group {
             display: flex;
             gap: 8px;
@@ -360,6 +366,81 @@
             display: block;
         }
 
+        .layer-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .layer-item:hover {
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .layer-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layer-color:hover {
+            transform: scale(1.1);
+        }
+
+        .layer-info {
+            flex: 1;
+        }
+
+        .layer-name {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .layer-color-hex {
+            font-size: 0.75em;
+            color: #999;
+            font-family: monospace;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .layer-btn {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layer-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .layer-color-btn {
+            flex: 1;
+        }
+
+        .layer-delete-btn {
+            flex: 1;
+        }
+
         .tutorial-step {
             background: white;
             border-radius: 8px;
@@ -499,6 +580,12 @@
             color: #555;
         }
 
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+
         .left-panel::-webkit-scrollbar,
         .right-panel::-webkit-scrollbar {
             width: 6px;
@@ -601,10 +688,21 @@
                 <div class="panel-section">
                     <h3><span class="section-icon">📄</span> 紙張管理</h3>
                     <div class="form-group" style="text-align: center; color: #666; font-size: 0.85em; margin-bottom: 12px;">
-                        紙張數：<strong id="paperCount">1</strong>层
+                        紙張数：<strong id="paperCount">1</strong>层
                     </div>
                     <button class="btn-primary btn-small" id="addPaperLayer" style="width: 100%; flex: none; margin-bottom: 12px;">📄 新增紙張</button>
-                    <div class="paper-spec">點擊按錠新增紙張层次。預設為1层白色卡紙。</div>
+                    <button class="btn-secondary btn-small" id="showPaperAnimation" style="width: 100%; flex: none; margin-bottom: 12px;">🎬 紙張層數動畫</button>
+                    <div class="paper-spec">為一次專針新增紙張或上色。</div>
+                </div>
+
+                <!-- 音效設定 -->
+                <div class="panel-section">
+                    <h3><span class="section-icon">🔊</span> 音效設定</h3>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <label for="soundToggle" style="margin: 0; flex: 1;">翻頁音效</label>
+                    </div>
+                    <div class="paper-spec">開闔卡片、新增/刪除紙張時會輸出音效。</div>
                 </div>
 
                 <!-- 接合方式 -->
@@ -622,7 +720,7 @@
                     <div class="paper-spec">白膠：黏性強，乾燥透明。雙面膠：快速乾淨。插接式：不需膠水。</div>
                 </div>
 
-                <!-- 紙張選擇 -->
+                <!-- 紙張見賜 -->
                 <div class="panel-section">
                     <h3><span class="section-icon">📄</span> 紙張見賜</h3>
                     <div class="form-group">
@@ -706,13 +804,22 @@
             <!-- 右側面板：資訊和教學 -->
             <div class="right-panel">
                 <div class="tabs">
-                    <button class="tab active" data-tab="info">📊 資訊</button>
+                    <button class="tab active" data-tab="layers">📄 圖層</button>
+                    <button class="tab" data-tab="info">📊 資訊</button>
                     <button class="tab" data-tab="tutorial">📚 教學</button>
                     <button class="tab" data-tab="export">💾 導出</button>
                 </div>
 
+                <!-- 圖層管理標籤 -->
+                <div id="layers" class="tab-content active">
+                    <div class="info-card">
+                        <h4>📄 紙張圖層</h4>
+                        <div id="layerPanel"></div>
+                    </div>
+                </div>
+
                 <!-- 資訊標籤 -->
-                <div id="info" class="tab-content active">
+                <div id="info" class="tab-content">
                     <div class="stats-grid">
                         <div class="stat-box">
                             <div class="stat-box-value" id="statArea">300</div>
@@ -775,16 +882,16 @@
                         <p>點擊左侧【新增紙張】按錠來新增紙張层次。每次添加的紙張會以動畫效果从explode進入模型。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">3</span>選擇程子</h5>
-                        <p>適適選擇卡版右上方的【根心結構】、【紙張見賜】等，看詳後的推薦附載。</p>
+                        <h5><span class="step-number">3</span>索寶圖層管理</h5>
+                        <p>按圖層上的🎨按錠可以更改紙張顏色，按🗑️按錠刪除紙張。至少需要保留 1 層紙張。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">4</span>系界旋轉諢暨光準</h5>
-                        <p>使用滑桿控制模例的旋轉、縮放。可选一級演示動画效果》、〈線框〉水不都鷸事。</p>
+                        <h5><span class="step-number">4</span>新增配置自動保存</h5>
+                        <p>每次上色新增層次時，設計數據會自動保存到测覽器後作穩。下次打開時會基於上次的配置。</p>
                     </div>
                     <div class="tutorial-step">
-                        <h5><span class="step-number">5</span>導出並製作</h5>
-                        <p>到了右侧【導出】間層選擇、剗出設計數據或可作為一個參考深度。敲打開闔的卡片並按紙子推薦來製作。</p>
+                        <h5><span class="step-number">5</span>使用紙張層數動畫</h5>
+                        <p>點擊【紙張層數動畫】按錠盔示所有紙張层次一起重新排列演示效果，展示紙張店粘活您的設計。</p>
                     </div>
                 </div>
 
