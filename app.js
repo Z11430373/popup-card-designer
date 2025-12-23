@@ -1,5 +1,5 @@
-// Pop-up Card Designer - Enhanced Core Application Logic
-// With mouse interaction, paper animation, add paper layers, and interactive card flipping
+// Pop-up Card Designer - Advanced Features
+// With paper color customization, sound effects, layer management, and auto-save
 
 class PopupCardDesigner {
     constructor() {
@@ -20,23 +20,33 @@ class PopupCardDesigner {
 
         // 滑鼠控制變數
         this.isDragging = false;
-        this.isFlipping = false; // 是否正在翻鼠
+        this.isFlipping = false;
         this.previousMousePosition = { x: 0, y: 0 };
         this.modelRotation = { x: 0, y: 0 };
         this.cameraDistance = 30;
-        this.flipStartX = 0; // 翻鼠开始位置
+        this.flipStartX = 0;
 
-        // 卡片開闔動畫變数
-        this.cardOpenAngle = 0; // 0 = 關閉, Math.PI = 完全打開
+        // 卡片開闔動畫變數
+        this.cardOpenAngle = 0;
         this.isCardOpening = false;
         this.targetCardAngle = 0;
         this.animationProgress = 0;
 
-        // 紙張變数
-        this.paperLayers = []; // 存存所有紙張层次
+        // 紙張管理變數
+        this.paperLayers = []; // 存儲所有紙張層次
+        this.paperLayerCount = 0;
+        this.paperColors = ['#ffffff', '#ffe8b6', '#ffd4d4', '#d4f1ff', '#e8d4ff', '#d4ffd4', '#ffffcc', '#ffcccc'];
+        this.selectedPaperIndex = -1; // 選中的紙張層索引
         this.paperAnimationTime = 0;
         this.showPaperAnimation = false;
-        this.paperLayerCount = 0; // 追追已添加多少层紙張
+
+        // 音效配置
+        this.soundEnabled = true;
+        this.audioContext = null;
+        this.initAudio();
+
+        // 自動保存配置
+        this.loadConfiguration();
 
         this.mechanismNames = {
             'vfold': 'V型摺',
@@ -65,7 +75,99 @@ class PopupCardDesigner {
         this.setupEventListeners();
         this.setupMouseControls();
         this.createInitialModel();
+        this.updateLayerPanel();
         this.animate();
+    }
+
+    initAudio() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioContext();
+        } catch (e) {
+            console.log('Audio context not supported');
+            this.soundEnabled = false;
+        }
+    }
+
+    playSound(type = 'flip') {
+        if (!this.soundEnabled || !this.audioContext) return;
+
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'flip') {
+            // 翻頁音效：短促的上升音調
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'add') {
+            // 新增紙張：清脆的上升音調
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'delete') {
+            // 刪除紙張：短促的下降音調
+            osc.frequency.setValueAtTime(500, now);
+            osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+    }
+
+    saveConfiguration() {
+        const config = {
+            mechanism: this.mechanism,
+            cardWidth: this.cardWidth,
+            cardHeight: this.cardHeight,
+            baseCardType: this.baseCardType,
+            elementCardType: this.elementCardType,
+            joinType: this.joinType,
+            cardColor: this.cardColor,
+            complexity: this.complexity,
+            paperLayers: this.paperLayers.map(layer => ({
+                color: layer.userData.color,
+                size: layer.userData.size
+            })),
+            projectName: document.getElementById('projectName').value
+        };
+        localStorage.setItem('popupCardConfig', JSON.stringify(config));
+    }
+
+    loadConfiguration() {
+        const saved = localStorage.getItem('popupCardConfig');
+        if (saved) {
+            try {
+                const config = JSON.parse(saved);
+                this.mechanism = config.mechanism || 'vfold';
+                this.cardWidth = config.cardWidth || 15;
+                this.cardHeight = config.cardHeight || 20;
+                this.baseCardType = config.baseCardType || '300gsm';
+                this.elementCardType = config.elementCardType || '220gsm';
+                this.joinType = config.joinType || 'glue';
+                this.cardColor = config.cardColor || 'white';
+                this.complexity = config.complexity || 2;
+                this.paperLayerCount = config.paperLayers ? config.paperLayers.length : 1;
+                
+                if (config.projectName) {
+                    document.getElementById('projectName').value = config.projectName;
+                }
+            } catch (e) {
+                console.log('Could not load configuration');
+            }
+        }
     }
 
     initThreeJS() {
@@ -73,22 +175,18 @@ class PopupCardDesigner {
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
 
-        // Scene setup
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xf5f7fa);
         this.scene.fog = new THREE.Fog(0xf5f7fa, 100, 200);
 
-        // Camera setup
         this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
         this.camera.position.set(0, 0, 30);
 
-        // Renderer setup
         this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
 
-        // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
@@ -101,14 +199,12 @@ class PopupCardDesigner {
         directionalLight.shadow.camera.bottom = -30;
         this.scene.add(directionalLight);
 
-        // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
     }
 
     setupMouseControls() {
         const canvas = document.getElementById('canvas');
 
-        // 滑鼠按下
         canvas.addEventListener('mousedown', (e) => {
             this.isDragging = true;
             this.isFlipping = true;
@@ -116,7 +212,6 @@ class PopupCardDesigner {
             this.previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // 滑鼠移動
         document.addEventListener('mousemove', (e) => {
             if (!this.isDragging) return;
 
@@ -124,22 +219,26 @@ class PopupCardDesigner {
             const deltaY = e.clientY - this.previousMousePosition.y;
             const totalFlipDelta = e.clientX - this.flipStartX;
 
-            // 翻鼠控制：左右滑動似会翻鼠卡片
             if (Math.abs(totalFlipDelta) > 10) {
                 const flipAngle = (totalFlipDelta / this.renderer.domElement.clientWidth) * Math.PI;
-                this.cardOpenAngle = Math.max(0, Math.min(Math.PI, flipAngle));
+                const newAngle = Math.max(0, Math.min(Math.PI, flipAngle));
+                
+                // 偵測翻頁動作並播放音效
+                if (Math.abs(newAngle - this.cardOpenAngle) > 0.05) {
+                    this.playSound('flip');
+                }
+                
+                this.cardOpenAngle = newAngle;
                 
                 if (this.leftCard) {
                     this.leftCard.rotation.y = -this.cardOpenAngle;
                 }
             }
 
-            // 拖轉控制（及時收集没有翻鼠）
             if (Math.abs(totalFlipDelta) <= 10) {
                 this.modelRotation.y += deltaX * 0.01;
                 this.modelRotation.x += deltaY * 0.01;
 
-                // 限制X軸旋轉
                 this.modelRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.modelRotation.x));
 
                 if (this.cardModel) {
@@ -147,7 +246,6 @@ class PopupCardDesigner {
                     this.cardModel.rotation.y = this.modelRotation.y;
                 }
 
-                // 更新滑桿值
                 document.getElementById('rotateX').value = (this.modelRotation.x * 180 / Math.PI).toFixed(0);
                 document.getElementById('rotateY').value = (this.modelRotation.y * 180 / Math.PI).toFixed(0);
             }
@@ -155,29 +253,22 @@ class PopupCardDesigner {
             this.previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // 滑鼠放開
         document.addEventListener('mouseup', () => {
             this.isDragging = false;
             this.isFlipping = false;
         });
 
-        // 防止移出畫布時中斷
         canvas.addEventListener('mouseleave', () => {
             this.isDragging = false;
             this.isFlipping = false;
         });
 
-        // 溻輪縮放
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-
             const delta = e.deltaY > 0 ? 1.1 : 0.9;
             this.cameraDistance *= delta;
             this.cameraDistance = Math.max(15, Math.min(60, this.cameraDistance));
-
             this.camera.position.z = this.cameraDistance;
-
-            // 更新縮放滑桿
             const scaleValue = 30 / this.cameraDistance;
             document.getElementById('scale').value = scaleValue.toFixed(2);
         }, { passive: false });
@@ -192,6 +283,7 @@ class PopupCardDesigner {
                 this.mechanism = item.dataset.mechanism;
                 this.updateMechanismInfo();
                 this.createInitialModel();
+                this.saveConfiguration();
             });
         });
 
@@ -202,6 +294,7 @@ class PopupCardDesigner {
                 item.classList.add('active');
                 this.cardColor = item.dataset.color;
                 this.createInitialModel();
+                this.saveConfiguration();
             });
         });
 
@@ -210,29 +303,34 @@ class PopupCardDesigner {
             this.cardWidth = parseFloat(e.target.value);
             this.updateCardInfo();
             this.createInitialModel();
+            this.saveConfiguration();
         });
 
         document.getElementById('cardHeight').addEventListener('change', (e) => {
             this.cardHeight = parseFloat(e.target.value);
             this.updateCardInfo();
             this.createInitialModel();
+            this.saveConfiguration();
         });
 
         // Paper types
         document.getElementById('baseCardType').addEventListener('change', (e) => {
             this.baseCardType = e.target.value;
             this.updateCardInfo();
+            this.saveConfiguration();
         });
 
         document.getElementById('elementCardType').addEventListener('change', (e) => {
             this.elementCardType = e.target.value;
             this.updateCardInfo();
+            this.saveConfiguration();
         });
 
         // Join type
         document.getElementById('joinType').addEventListener('change', (e) => {
             this.joinType = e.target.value;
             this.updateCardInfo();
+            this.saveConfiguration();
         });
 
         // Complexity slider
@@ -240,6 +338,7 @@ class PopupCardDesigner {
             this.complexity = parseInt(e.target.value);
             document.getElementById('complexityValue').textContent = this.complexity;
             this.updateCardInfo();
+            this.saveConfiguration();
         });
 
         // Rotation controls
@@ -290,12 +389,19 @@ class PopupCardDesigner {
             paperAnimBtn.addEventListener('click', () => {
                 this.showPaperAnimation = !this.showPaperAnimation;
                 if (this.showPaperAnimation) {
-                    this.createCardWithPaperAnimation();
+                    this.paperAnimationTime = 0;
                     paperAnimBtn.textContent = '🎬 停止紙張演示';
                 } else {
-                    this.createInitialModel();
-                    paperAnimBtn.textContent = '📄 紙張展開';
+                    paperAnimBtn.textContent = '🎬 紙張層數動畫';
                 }
+            });
+        }
+
+        // Sound toggle
+        const soundToggle = document.getElementById('soundToggle');
+        if (soundToggle) {
+            soundToggle.addEventListener('change', (e) => {
+                this.soundEnabled = e.target.checked;
             });
         }
 
@@ -325,7 +431,10 @@ class PopupCardDesigner {
 
         // Reset button
         document.getElementById('resetBtn').addEventListener('click', () => {
-            location.reload();
+            if (confirm('確定要重置所有設置？')) {
+                localStorage.removeItem('popupCardConfig');
+                location.reload();
+            }
         });
 
         // Export buttons
@@ -353,20 +462,19 @@ class PopupCardDesigner {
         });
     }
 
-    addPaperLayer() {
+    addPaperLayer(color = null) {
         if (!this.cardModel) return;
 
         this.paperLayerCount++;
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // 連續添加紙張层
-        const colors = [0xffffff, 0xffe8b6, 0xffd4d4, 0xd4f1ff, 0xe8d4ff, 0xd4ffd4, 0xffffcc, 0xffcccc];
-        const colorIndex = (this.paperLayerCount - 1) % colors.length;
+        const colorIndex = (this.paperLayerCount - 1) % this.paperColors.length;
+        const finalColor = color || this.paperColors[colorIndex];
 
         const paperGeom = new THREE.BoxGeometry(width * 1.1, height * 1.1, 0.08);
         const paperMaterial = new THREE.MeshStandardMaterial({
-            color: colors[colorIndex],
+            color: finalColor,
             metalness: 0.08,
             roughness: 0.8,
             side: THREE.DoubleSide
@@ -374,18 +482,21 @@ class PopupCardDesigner {
         const paper = new THREE.Mesh(paperGeom, paperMaterial);
         paper.position.z = -2 - this.paperLayerCount * 0.3;
         paper.castShadow = true;
+        paper.userData.color = finalColor;
+        paper.userData.size = { width: width * 1.1, height: height * 1.1 };
+        paper.userData.index = this.paperLayerCount - 1;
         
         this.cardModel.add(paper);
         this.paperLayers.push(paper);
 
         // 動畫效果
         const targetZ = paper.position.z;
-        const startZ = 5; // 从遙達的地方
+        const startZ = 5;
         paper.position.z = startZ;
 
         let startTime = Date.now();
         const animatePaper = () => {
-            const elapsed = (Date.now() - startTime) / 300; // 300ms動畫時間
+            const elapsed = (Date.now() - startTime) / 300;
             if (elapsed < 1) {
                 paper.position.z = startZ + (targetZ - startZ) * elapsed;
                 paper.rotation.x = elapsed * Math.PI * 0.5;
@@ -399,52 +510,146 @@ class PopupCardDesigner {
         };
         animatePaper();
 
-        this.showSuccessMessage(`已添加第 ${this.paperLayerCount} 层紙張！`);
+        this.playSound('add');
+        this.updateLayerPanel();
+        this.saveConfiguration();
+        this.showSuccessMessage(`已新增第 ${this.paperLayerCount} 層紙張！`);
     }
 
-    createCardWithPaperAnimation() {
-        // Remove old model
-        if (this.cardModel) {
-            this.scene.remove(this.cardModel);
+    deletePaperLayer(index) {
+        if (index < 0 || index >= this.paperLayers.length) return;
+        if (this.paperLayers.length <= 1) {
+            this.showWarning('至少需要保留 1 層紙張！');
+            return;
         }
 
-        // Create main card model
-        this.cardModel = new THREE.Group();
-        this.scene.add(this.cardModel);
+        const paper = this.paperLayers[index];
+        
+        // 刪除動畫
+        let startTime = Date.now();
+        const animateDelete = () => {
+            const elapsed = (Date.now() - startTime) / 200;
+            if (elapsed < 1) {
+                paper.scale.set(1 - elapsed, 1 - elapsed, 1 - elapsed);
+                paper.position.z -= elapsed * 2;
+                paper.rotation.x -= elapsed * Math.PI * 0.3;
+                requestAnimationFrame(animateDelete);
+            } else {
+                this.cardModel.remove(paper);
+                this.paperLayers.splice(index, 1);
+                this.paperLayerCount--;
+                this.updateLayerPanel();
+                this.saveConfiguration();
+                this.playSound('delete');
+                this.showSuccessMessage('紙張已刪除！');
+            }
+        };
+        animateDelete();
+    }
 
-        // Create the actual popup mechanism
-        this.createInitialModel();
+    updateLayerPanel() {
+        const layerPanel = document.getElementById('layerPanel');
+        if (!layerPanel) return;
+
+        layerPanel.innerHTML = '';
+        
+        if (this.paperLayers.length === 0) {
+            layerPanel.innerHTML = '<div style="padding: 10px; color: #999; text-align: center; font-size: 0.85em;">未新增紙張</div>';
+            return;
+        }
+
+        this.paperLayers.forEach((paper, index) => {
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item';
+            layerItem.innerHTML = `
+                <div class="layer-color" style="background-color: ${paper.userData.color};"></div>
+                <div class="layer-info">
+                    <div class="layer-name">第 ${index + 1} 層</div>
+                    <div class="layer-color-hex">${paper.userData.color}</div>
+                </div>
+                <div class="layer-controls">
+                    <button class="layer-btn layer-color-btn" data-index="${index}" title="更改顏色">🎨</button>
+                    <button class="layer-btn layer-delete-btn" data-index="${index}" title="刪除">🗑️</button>
+                </div>
+            `;
+
+            const colorBtn = layerItem.querySelector('.layer-color-btn');
+            const deleteBtn = layerItem.querySelector('.layer-delete-btn');
+
+            colorBtn.addEventListener('click', () => {
+                this.showColorPicker(index);
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                this.deletePaperLayer(index);
+            });
+
+            layerPanel.appendChild(layerItem);
+        });
+
+        document.getElementById('paperCount').textContent = this.paperLayerCount;
+    }
+
+    showColorPicker(layerIndex) {
+        const paper = this.paperLayers[layerIndex];
+        const input = document.createElement('input');
+        input.type = 'color';
+        input.value = paper.userData.color;
+        
+        input.addEventListener('change', (e) => {
+            const newColor = e.target.value;
+            paper.userData.color = newColor;
+            
+            // 更新材質顏色
+            paper.material.color.setStyle(newColor);
+            
+            this.updateLayerPanel();
+            this.saveConfiguration();
+            this.showSuccessMessage(`第 ${layerIndex + 1} 層顏色已更改！`);
+        });
+        
+        input.click();
     }
 
     createInitialModel() {
-        // Remove old model
         if (this.cardModel) {
             this.scene.remove(this.cardModel);
         }
 
-        // Create model group
         this.cardModel = new THREE.Group();
         this.scene.add(this.cardModel);
+        
         this.paperLayers = [];
 
-        // 預設添加一层紙張
-        const width = this.cardWidth / 2;
-        const height = this.cardHeight / 2;
-        const paperGeom = new THREE.BoxGeometry(width * 1.1, height * 1.1, 0.08);
-        const paperMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            metalness: 0.08,
-            roughness: 0.8,
-            side: THREE.DoubleSide
-        });
-        const paper = new THREE.Mesh(paperGeom, paperMaterial);
-        paper.position.z = -2;
-        paper.castShadow = true;
-        this.cardModel.add(paper);
-        this.paperLayers.push(paper);
-        this.paperLayerCount = 1;
+        // 重新創建預設紙張
+        if (this.paperLayerCount === 0) {
+            this.paperLayerCount = 1;
+        }
 
-        // Create card based on mechanism
+        for (let i = 0; i < this.paperLayerCount; i++) {
+            const width = this.cardWidth / 2;
+            const height = this.cardHeight / 2;
+            const colorIndex = i % this.paperColors.length;
+            
+            const paperGeom = new THREE.BoxGeometry(width * 1.1, height * 1.1, 0.08);
+            const paperMaterial = new THREE.MeshStandardMaterial({
+                color: this.paperColors[colorIndex],
+                metalness: 0.08,
+                roughness: 0.8,
+                side: THREE.DoubleSide
+            });
+            const paper = new THREE.Mesh(paperGeom, paperMaterial);
+            paper.position.z = -2 - i * 0.3;
+            paper.castShadow = true;
+            paper.userData.color = this.paperColors[colorIndex];
+            paper.userData.size = { width: width * 1.1, height: height * 1.1 };
+            paper.userData.index = i;
+            
+            this.cardModel.add(paper);
+            this.paperLayers.push(paper);
+        }
+
+        // 創建卡片結構
         switch (this.mechanism) {
             case 'vfold':
                 this.createVFoldCard();
@@ -463,16 +668,15 @@ class PopupCardDesigner {
                 break;
         }
 
-        // Restore rotation state
         this.cardModel.rotation.x = this.modelRotation.x;
         this.cardModel.rotation.y = this.modelRotation.y;
+        this.updateLayerPanel();
     }
 
     createVFoldCard() {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // 左側卡片（可開闔）
         const leftCardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const material = this.getCardMaterial();
         const leftCard = new THREE.Mesh(leftCardGeom, material);
@@ -481,13 +685,11 @@ class PopupCardDesigner {
         this.cardModel.add(leftCard);
         this.leftCard = leftCard;
 
-        // 右側卡片（固定）
         const rightCard = new THREE.Mesh(leftCardGeom, material);
         rightCard.position.set(width / 2, 0, 0);
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // V-fold element
         const vFoldGroup = new THREE.Group();
         
         const triangleShape = new THREE.Shape();
@@ -517,7 +719,6 @@ class PopupCardDesigner {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // Base cards
         const leftCardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const material = this.getCardMaterial();
         const leftCard = new THREE.Mesh(leftCardGeom, material);
@@ -531,7 +732,6 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Stacked boxes
         const boxHeight = height / 3;
         const elementMaterial = this.getElementMaterial();
 
@@ -549,7 +749,6 @@ class PopupCardDesigner {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // Base cards
         const cardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const baseMaterial = this.getCardMaterial();
         
@@ -564,7 +763,6 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Side support bars
         const barGeom = new THREE.BoxGeometry(0.3, height * 1.2, 1);
         const barMaterial = this.getElementMaterial();
         
@@ -578,7 +776,6 @@ class PopupCardDesigner {
         rightBar.castShadow = true;
         this.cardModel.add(rightBar);
 
-        // Floating layers
         for (let i = 0; i < 4; i++) {
             const layerGeom = new THREE.BoxGeometry(width * 0.7, height * 0.7, 0.1);
             const layerMaterial = new THREE.MeshStandardMaterial({
@@ -597,7 +794,6 @@ class PopupCardDesigner {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // Base cards
         const cardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const material = this.getCardMaterial();
         
@@ -612,7 +808,6 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Main mechanism
         const mainGeom = new THREE.BoxGeometry(width * 0.6, height * 0.5, 0.08);
         const mainMaterial = this.getElementMaterial();
         this.pullTabElement = new THREE.Mesh(mainGeom, mainMaterial);
@@ -620,7 +815,6 @@ class PopupCardDesigner {
         this.pullTabElement.castShadow = true;
         this.cardModel.add(this.pullTabElement);
 
-        // Pull tab handle
         const tabGeom = new THREE.BoxGeometry(width * 0.3, 0.5, 0.08);
         const tab = new THREE.Mesh(tabGeom, mainMaterial);
         tab.position.set(width * 0.4, -height * 0.3, 1);
@@ -632,7 +826,6 @@ class PopupCardDesigner {
         const width = this.cardWidth / 2;
         const height = this.cardHeight / 2;
 
-        // Base cards
         const cardGeom = new THREE.BoxGeometry(width, height, 0.1);
         const material = this.getCardMaterial();
         
@@ -647,7 +840,6 @@ class PopupCardDesigner {
         rightCard.castShadow = true;
         this.cardModel.add(rightCard);
 
-        // Pivot point
         const pivotGeom = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
         const pivotMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc });
         const pivot = new THREE.Mesh(pivotGeom, pivotMaterial);
@@ -655,7 +847,6 @@ class PopupCardDesigner {
         pivot.castShadow = true;
         this.cardModel.add(pivot);
 
-        // Spinning element
         const spinnerGroup = new THREE.Group();
         const wingGeom = new THREE.PlaneGeometry(2, 3);
         const wingMaterial = this.getElementMaterial();
@@ -674,10 +865,8 @@ class PopupCardDesigner {
 
     toggleCardAnimation() {
         if (this.cardOpenAngle >= Math.PI * 0.99) {
-            // Currently open, close it
             this.targetCardAngle = 0;
         } else {
-            // Currently closed, open it
             this.targetCardAngle = Math.PI;
         }
         this.isCardOpening = true;
@@ -753,7 +942,40 @@ class PopupCardDesigner {
     animate() {
         this.animationId = requestAnimationFrame(() => this.animate());
 
-        // Auto-animation for mechanisms
+        // 紙張層數動畫演示
+        if (this.showPaperAnimation) {
+            this.paperAnimationTime += 0.016; // 約60fps
+            if (this.paperAnimationTime > 8) {
+                this.paperAnimationTime = 0;
+            }
+
+            this.paperLayers.forEach((paper, i) => {
+                const delay = i * 0.3;
+                const animProgress = Math.max(0, Math.min(1, (this.paperAnimationTime - delay) / 1.5));
+                
+                if (animProgress >= 0 && animProgress <= 1) {
+                    paper.rotation.x = animProgress * Math.PI * 0.5;
+                    paper.position.z = -2 - i * 0.3 + animProgress * 3;
+                    paper.position.y = Math.sin(animProgress * Math.PI) * 1.5;
+                }
+            });
+        }
+
+        // 卡片開闔動畫
+        if (this.isCardOpening) {
+            const diff = this.targetCardAngle - this.cardOpenAngle;
+            if (Math.abs(diff) > 0.01) {
+                this.cardOpenAngle += diff * 0.1;
+                if (this.leftCard) {
+                    this.leftCard.rotation.y = -this.cardOpenAngle;
+                }
+            } else {
+                this.cardOpenAngle = this.targetCardAngle;
+                this.isCardOpening = false;
+            }
+        }
+
+        // 自動動畫
         if (this.isAnimating) {
             const time = Date.now() * 0.001;
 
@@ -806,7 +1028,10 @@ class PopupCardDesigner {
             joinType: this.joinType,
             cardColor: this.cardColor,
             complexity: this.complexity,
-            paperLayers: this.paperLayerCount,
+            paperLayers: this.paperLayers.map(p => ({
+                color: p.userData.color,
+                size: p.userData.size
+            })),
             timestamp: new Date().toISOString()
         };
 
@@ -818,12 +1043,25 @@ class PopupCardDesigner {
     }
 
     exportToPDF() {
-        alert('PDF匯出功能需要在Illustrator或Inkscape中進行進一步編輯。\n\n建議步驟：\n1. 在此工具中設計您的卡片結構\n2. 將設計導出為JSON\n3. 在向量設計軟體中使用紅色線表示切割，藍色線表示摺痕\n4. 匯出為PDF');
+        alert('PDF匯出功能需要在Illustrator或Inkscape中進行進一步編輯。\n\n建議步驟：\n1. 在此工具中設計您的卡片結構\n2. 將設計匯出為JSON\n3. 在向量設計軟體中使用紅色線表示切割，藍色線表示摺痕\n4. 匯出為PDF');
     }
 
     showSuccessMessage(message) {
         const box = document.createElement('div');
         box.className = 'success-box';
+        box.textContent = message;
+        box.style.position = 'fixed';
+        box.style.top = '20px';
+        box.style.right = '20px';
+        box.style.zIndex = '10000';
+        box.style.maxWidth = '300px';
+        document.body.appendChild(box);
+        setTimeout(() => box.remove(), 3000);
+    }
+
+    showWarning(message) {
+        const box = document.createElement('div');
+        box.className = 'warning-box';
         box.textContent = message;
         box.style.position = 'fixed';
         box.style.top = '20px';
@@ -845,8 +1083,7 @@ class PopupCardDesigner {
     }
 }
 
-// Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const app = new PopupCardDesigner();
-    console.log('Pop-up Card Designer initialized with add paper layers and mouse flipping');
+    console.log('Pop-up Card Designer initialized with advanced features');
 });
